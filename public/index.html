@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14532d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sales Previews">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon.svg">
+<title>Sales Previews</title>
+<style>
+  :root { --g:#14532d; --g2:#16a34a; --bg:#f5f5f0; --card:#fff; --ink:#1c1917; --mute:#78716c; --red:#b91c1c; --amber:#b45309; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.45 -apple-system,system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); padding-bottom:env(safe-area-inset-bottom); }
+  header { background:var(--g); color:#fff; padding:calc(14px + env(safe-area-inset-top)) 18px 14px; display:flex; justify-content:space-between; align-items:center; }
+  header h1 { font-size:20px; margin:0; letter-spacing:-.3px; }
+  header button { background:none; border:1px solid #ffffff66; color:#fff; border-radius:8px; padding:6px 10px; font-size:14px; }
+  main { padding:16px; max-width:560px; margin:auto; }
+  .card { background:var(--card); border-radius:14px; padding:16px; box-shadow:0 1px 3px #0001; margin-bottom:14px; }
+  .scan { width:100%; padding:22px; font-size:20px; font-weight:700; color:#fff; background:var(--g2); border:0; border-radius:14px; display:flex; gap:10px; justify-content:center; align-items:center; }
+  .scan:active { transform:scale(.98); }
+  .row { display:flex; gap:10px; margin-top:12px; }
+  input[type=number], input[type=text] { flex:1; padding:12px; font-size:16px; border:1px solid #d6d3d1; border-radius:10px; width:100%; }
+  .thumbs { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .thumbs div { position:relative; }
+  .thumbs img { width:72px; height:72px; object-fit:cover; border-radius:10px; }
+  .thumbs b { position:absolute; top:-6px; right:-6px; background:#000c; color:#fff; width:22px; height:22px; border-radius:50%; text-align:center; font-size:14px; line-height:22px; }
+  .go { width:100%; margin-top:12px; padding:14px; font-size:17px; font-weight:700; background:var(--g); color:#fff; border:0; border-radius:12px; }
+  .go:disabled { opacity:.5; }
+  .ghost { background:none; border:1px dashed #a8a29e; color:var(--mute); padding:10px; border-radius:10px; width:100%; margin-top:10px; font-size:15px; }
+  .price { font-size:34px; font-weight:800; color:var(--g); letter-spacing:-1px; }
+  .verdict { display:inline-block; padding:4px 12px; border-radius:99px; font-weight:800; font-size:14px; color:#fff; }
+  .BUY { background:var(--g2); } .MAYBE { background:var(--amber); } .PASS { background:var(--red); }
+  .muted { color:var(--mute); font-size:14px; }
+  h2 { font-size:21px; margin:6px 0 2px; }
+  h3 { font-size:14px; text-transform:uppercase; letter-spacing:.5px; color:var(--mute); margin:16px 0 6px; }
+  ul { margin:0; padding-left:20px; }
+  .links { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+  .links a { flex:1 1 45%; text-align:center; padding:11px; border-radius:10px; background:#f0fdf4; color:var(--g); text-decoration:none; font-weight:600; font-size:15px; border:1px solid #bbf7d0; }
+  .err { color:var(--red); font-weight:600; }
+  .spin { width:38px; height:38px; border:4px solid #d1fae5; border-top-color:var(--g2); border-radius:50%; animation:s 0.8s linear infinite; margin:10px auto; }
+  @keyframes s { to { transform:rotate(360deg); } }
+  .hist { display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid #eee; }
+  .hist:last-child { border:0; }
+  .hist img { width:56px; height:56px; object-fit:cover; border-radius:8px; flex:none; }
+  .hist .t { flex:1; min-width:0; }
+  .hist .t div:first-child { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hidden { display:none; }
+  .eb { display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #eee; color:inherit; text-decoration:none; }
+  .eb img { width:54px; height:54px; object-fit:cover; border-radius:8px; flex:none; background:#eee; }
+  .eb .t { flex:1; min-width:0; font-size:14px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+  .eb b { color:var(--g); }
+</style>
+</head>
+<body>
+<header>
+  <h1>📸 Sales Previews</h1>
+  <button id="histBtn">History</button>
+</header>
+<main>
+  <section id="scanView">
+    <div class="card">
+      <button class="scan" id="camBtn">📷 Scan an item</button>
+      <input type="file" id="cam" accept="image/*" capture="environment" class="hidden">
+      <input type="file" id="lib" accept="image/*" multiple class="hidden">
+      <div class="thumbs" id="thumbs"></div>
+      <button class="ghost" id="moreBtn">+ Add another angle / label photo</button>
+      <div class="row">
+        <input type="number" id="price" inputmode="decimal" placeholder="Asking price $ (optional)">
+      </div>
+      <div class="row">
+        <input type="text" id="notes" placeholder="Notes: markings, works?, etc. (optional)">
+      </div>
+      <button class="go" id="goBtn" disabled>Identify &amp; price it</button>
+    </div>
+    <div id="result"></div>
+  </section>
+
+  <section id="histView" class="hidden">
+    <div class="card">
+      <h3 style="margin-top:0">Past scans</h3>
+      <div id="histList"></div>
+      <button class="ghost" id="clearBtn">Clear history</button>
+    </div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let photos = []; // data URLs
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const money = (n) => "$" + Math.round(Number(n) || 0).toLocaleString();
+
+function loadHist() { try { return JSON.parse(localStorage.getItem("scans") || "[]"); } catch { return []; } }
+function saveHist(h) { try { localStorage.setItem("scans", JSON.stringify(h.slice(0, 100))); } catch {} }
+
+function shrink(file, max = 1280, q = 0.82) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(img.src);
+      resolve(c.toDataURL("image/jpeg", q));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+async function addFiles(files) {
+  for (const f of files) { if (photos.length < 4) photos.push(await shrink(f)); }
+  renderThumbs();
+}
+function renderThumbs() {
+  $("thumbs").innerHTML = photos.map((p, i) => `<div><img src="${p}"><b data-i="${i}">×</b></div>`).join("");
+  $("goBtn").disabled = !photos.length;
+  $("camBtn").textContent = photos.length ? "📷 Retake / new item" : "📷 Scan an item";
+}
+$("thumbs").onclick = (e) => { const i = e.target.dataset.i; if (i != null) { photos.splice(+i, 1); renderThumbs(); } };
+$("camBtn").onclick = () => { photos = []; renderThumbs(); $("result").innerHTML = ""; $("cam").click(); };
+$("moreBtn").onclick = () => $("lib").click();
+$("cam").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
+$("lib").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
+
+$("goBtn").onclick = async () => {
+  $("goBtn").disabled = true;
+  $("result").innerHTML = `<div class="card" style="text-align:center"><div class="spin"></div><div class="muted">Identifying and pricing…</div></div>`;
+  try {
+    const r = await fetch("/api/identify", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ images: photos, price: $("price").value, notes: $("notes").value }),
+    });
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Something went wrong");
+    d.asked = $("price").value; d.when = Date.now();
+    const thumb = await shrinkData(photos[0], 160);
+    const h = loadHist(); h.unshift({ ...d, thumb }); saveHist(h);
+    showResult(d);
+  } catch (e) {
+    $("result").innerHTML = `<div class="card err">⚠️ ${esc(e.message)}</div>`;
+  }
+  $("goBtn").disabled = false;
+};
+
+function shrinkData(dataUrl, max) {
+  return new Promise((res) => { const img = new Image(); img.onload = () => {
+    const s = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement("canvas");
+    c.width = img.width * s; c.height = img.height * s; c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    res(c.toDataURL("image/jpeg", 0.6)); }; img.src = dataUrl; });
+}
+
+function list(arr) { return arr && arr.length ? `<ul>${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="muted">None noted</div>`; }
+
+function items(arr) {
+  return arr.slice(0, 8).map((i) => `
+    <a class="eb" target="_blank" rel="noopener" href="${esc(i.url)}">
+      <img src="${esc(i.image || "")}" loading="lazy">
+      <span class="t">${esc(i.title)}<br><span class="muted">${esc(i.condition || "")}${(i.buyingOptions||[]).includes("AUCTION") ? " · auction" : ""}</span></span>
+      <b>${i.price ? money(i.price) : ""}</b>
+    </a>`).join("");
+}
+function ebayBlock(e) {
+  if (!e) return "";
+  if (e.error) return `<h3>eBay</h3><div class="muted">${esc(e.error)}</div>`;
+  let h = `<h3>On eBay right now</h3>`;
+  if (e.stats) h += `<div><b>${e.total.toLocaleString()}</b> active listings · asking ${money(e.stats.low)}–${money(e.stats.high)}, median <b>${money(e.stats.median)}</b></div>`;
+  else h += `<div class="muted">No matching active listings found.</div>`;
+  if (e.image && e.image.length) h += `<h3>📷 Visual matches</h3>${items(e.image)}`;
+  if (e.keyword && e.keyword.length) h += `<h3>🔎 Keyword matches</h3>${items(e.keyword)}`;
+  return h;
+}
+
+function showResult(d) {
+  const q = encodeURIComponent(d.search_query || d.item || "");
+  const v = ["BUY","MAYBE","PASS"].includes(d.verdict) ? d.verdict : "MAYBE";
+  $("result").innerHTML = `
+  <div class="card">
+    <div class="muted">${esc(d.category)} · ${esc(d.confidence)} confidence</div>
+    <h2>${esc(d.item)}</h2>
+    <div class="price">${money(d.price_low)} – ${money(d.price_high)}</div>
+    <div class="muted">${esc(d.price_basis)}</div>
+    <p><span class="verdict ${v}">${v}</span> ${d.asked ? `<span class="muted">asking ${money(d.asked)}</span>` : ""}<br>${esc(d.verdict_reason)}</p>
+    <p>${esc(d.description)}</p>
+    ${ebayBlock(d.ebay)}
+    <h3>Check sold prices</h3>
+    <div class="links">
+      <a target="_blank" rel="noopener" href="https://www.ebay.com/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1">eBay sold</a>
+      <a target="_blank" rel="noopener" href="https://www.google.com/search?tbm=shop&q=${q}">Google Shopping</a>
+      <a target="_blank" rel="noopener" href="https://www.facebook.com/marketplace/search/?query=${q}">FB Marketplace</a>
+      <a target="_blank" rel="noopener" href="https://www.worthpoint.com/search?query=${q}">WorthPoint</a>
+    </div>
+    <h3>Best places to sell</h3><div>${esc((d.best_platforms || []).join(", "))}</div>
+    <h3>Condition</h3><div>${esc(d.condition_notes)}</div>
+    <h3>Check before buying</h3>${list(d.check_before_buying)}
+    <h3>Red flags</h3>${list(d.red_flags)}
+  </div>`;
+  $("result").scrollIntoView({ behavior: "smooth" });
+}
+
+function showHist() {
+  const h = loadHist();
+  $("histList").innerHTML = h.length ? h.map((d, i) => `
+    <div class="hist" data-i="${i}">
+      <img src="${d.thumb || ""}">
+      <div class="t"><div>${esc(d.item)}</div><div class="muted">${money(d.price_low)}–${money(d.price_high)} · ${esc(d.verdict)} · ${new Date(d.when).toLocaleDateString()}</div></div>
+    </div>`).join("") : `<div class="muted">No scans yet.</div>`;
+}
+$("histList").onclick = (e) => {
+  const el = e.target.closest(".hist"); if (!el) return;
+  const d = loadHist()[+el.dataset.i]; toggle(false); showResult(d);
+};
+function toggle(hist) {
+  $("scanView").classList.toggle("hidden", hist); $("histView").classList.toggle("hidden", !hist);
+  $("histBtn").textContent = hist ? "Scan" : "History"; if (hist) showHist();
+}
+$("histBtn").onclick = () => toggle($("histView").classList.contains("hidden"));
+$("clearBtn").onclick = () => { saveHist([]); showHist(); };
+</script>
+</body>
+</html>
