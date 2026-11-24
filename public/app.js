@@ -42,7 +42,12 @@ function toast(msg) {
   const t = $("toast"); t.textContent = msg; t.classList.add("show");
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 2200);
 }
+const guestMode = () => cfg.db === false;
 async function api(path, opts = {}) {
+  if (guestMode()) return localApi(path, opts);
+  return serverApi(path, opts);
+}
+async function serverApi(path, opts = {}) {
   const r = await fetch(path, {
     method: opts.method || "GET",
     headers: { "Content-Type": "application/json", ...(token ? { Authorization: "Bearer " + token } : {}) },
@@ -59,6 +64,91 @@ async function copy(text) {
   catch { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); toast("Copied"); }
 }
 
+// ================================================================= guest mode (no accounts yet)
+// Everything lives on this phone. Full photos are kept for the newest 25 scans to save space.
+const G = {
+  scans() { return LS.get("sp_g_scans", []); },
+  save(list) {
+    list.forEach((x, i) => { if (i >= 25) delete x.photo; });
+    for (let tries = 0; tries < 30; tries++) {
+      try { localStorage.setItem("sp_g_scans", JSON.stringify(list)); return; }
+      catch { const i = list.map((x) => !!x.photo).lastIndexOf(true); if (i < 0) break; delete list[i].photo; }
+    }
+    toast("Phone storage is full. Delete a few old items.");
+  },
+  profile() { return Object.assign({ display_name: "", avatar: "🦊" }, LS.get("sp_g_profile", {})); },
+};
+function guestStats(list) {
+  const has = (x, ...st) => st.includes(x.status);
+  const sum = (arr, f) => arr.reduce((a, x) => a + nOr(f(x)), 0);
+  const sold = list.filter((x) => has(x, "sold"));
+  return {
+    scans: list.length, bought: list.filter((x) => has(x, "bought", "listed", "sold")).length,
+    listed: list.filter((x) => has(x, "listed")).length, sold: sold.length,
+    spent: sum(list.filter((x) => has(x, "bought", "listed", "sold")), (x) => x.paid),
+    sold_cost: sum(sold, (x) => x.paid), revenue: sum(sold, (x) => x.sold_price), sold_ship: sum(sold, (x) => x.ship),
+    inventory_value: sum(list.filter((x) => has(x, "bought", "listed")), (x) => x.est_sell),
+  };
+}
+async function localApi(path, opts = {}) {
+  const m = opts.method || "GET", b = opts.body || {};
+  let mm;
+  if (path === "/api/me" && m === "GET") {
+    const pr = G.profile();
+    let q = {}; try { q = await serverApi("/api/guest"); } catch {}
+    return { user: { username: "guest", display_name: pr.display_name || "You", avatar: pr.avatar, guest: true, settings: settings() },
+      stats: guestStats(G.scans()), remaining: q.remaining ?? null, perDay: q.perDay };
+  }
+  if (path === "/api/me" && m === "PATCH") {
+    const pr = G.profile();
+    if (b.display_name !== undefined) pr.display_name = String(b.display_name).trim().slice(0, 30);
+    if (b.avatar !== undefined) pr.avatar = b.avatar;
+    LS.set("sp_g_profile", pr);
+    return { user: { username: "guest", display_name: pr.display_name || "You", avatar: pr.avatar, guest: true, settings: settings() } };
+  }
+  if (path === "/api/scans" && m === "GET") return G.scans().map((x) => { const y = { ...x }; delete y.photo; return y; });
+  if (path === "/api/identify") {
+    const list = G.scans();
+    const prev = b.scan_id ? list.find((x) => x.id === b.scan_id) : null;
+    const body = { ...b };
+    if (prev) { body.images = prev.photo ? [prev.photo] : []; body.prev = { asked: prev.asked, upc: prev.upc }; }
+    delete body.photo; delete body.thumb;
+    const r = await serverApi("/api/identify", { method: "POST", body });
+    const remaining = r.remaining; delete r.remaining;
+    let scan;
+    if (prev) {
+      scan = Object.assign(prev, r, { id: prev.id, paid: prev.paid, notes: prev.notes, status: prev.status, in_haul: prev.in_haul,
+        thumb: prev.thumb, photo: prev.photo, when: prev.when, listing: undefined });
+    } else {
+      const now = Date.now();
+      scan = { ...r, id: now, when: now, status: "watching", paid: r.asked ? +r.asked : null, sold_price: null, notes: "",
+        in_haul: false, share_id: null, thumb: b.thumb || null, photo: b.photo || null };
+      list.unshift(scan);
+    }
+    G.save(list);
+    return { ...scan, remaining };
+  }
+  if ((mm = path.match(/^\/api\/scans\/(\d+)$/))) {
+    const list = G.scans(); const i = list.findIndex((x) => x.id === +mm[1]);
+    if (i < 0) throw new Error("Item not found");
+    if (m === "GET") return list[i];
+    if (m === "DELETE") { list.splice(i, 1); G.save(list); return { ok: true }; }
+    if (m === "PATCH") { Object.assign(list[i], b); G.save(list); return list[i]; }
+  }
+  if ((mm = path.match(/^\/api\/scans\/(\d+)\/listing$/))) {
+    const list = G.scans(); const x = list.find((y) => y.id === +mm[1]);
+    if (!x) throw new Error("Item not found");
+    if (x.listing) return x.listing;
+    const scan = { ...x }; delete scan.photo; delete scan.thumb; delete scan.ebay;
+    const L = await serverApi("/api/listing", { method: "POST", body: { scan } });
+    x.listing = L; G.save(list);
+    return L;
+  }
+  if (path.includes("/share")) throw new Error("Share links switch on once accounts are set up.");
+  if (path === "/api/haul/clear") { const list = G.scans(); list.forEach((x) => (x.in_haul = false)); G.save(list); return { ok: true }; }
+  throw new Error("Not available yet");
+}
+
 // ================================================================= theme / settings
 function applyTheme() {
   const s = settings();
@@ -69,7 +159,7 @@ function applyTheme() {
   document.querySelector('meta[name="theme-color"]').content = t === "light" ? "#f5f5f1" : "#0a0a0c";
 }
 matchMedia("(prefers-color-scheme: light)").addEventListener?.("change", applyTheme);
-const pushSettings = debounce(() => { if (token) api("/api/me", { method: "PATCH", body: { settings: settings() } }).catch(() => {}); }, 600);
+const pushSettings = debounce(() => { if (token && !guestMode()) api("/api/me", { method: "PATCH", body: { settings: settings() } }).catch(() => {}); }, 600);
 function setSetting(k, v) {
   const s = settings(); s[k] = v; LS.set("sp_settings", s);
   applyTheme(); pushSettings();
@@ -138,11 +228,11 @@ async function boot() {
   try { cfg = Object.assign(cfg, await (await fetch("/api/config")).json()); } catch {}
   const share = location.pathname.match(/^\/s\/([a-z0-9]+)/);
   if (share) return showShare(share[1]);
-  if (!token) return showAuth();
+  if (!guestMode() && !token) return showAuth();
   try { await loadMe(); } catch { return; }
   $("authView").classList.add("hidden");
   $("app").classList.remove("hidden"); $("tabs").classList.remove("hidden");
-  $("hello").textContent = `Hey ${me.display_name}. Snap anything at a sale to get an ID, a price, your profit and live eBay matches.`;
+  $("hello").textContent = `Hey ${me.display_name === "You" ? "there" : me.display_name}. Snap anything at a sale to get an ID, a price, your profit and live eBay matches.`;
   renderTips();
   view("scan");
   loadScans().catch(() => {});
@@ -362,7 +452,7 @@ function renderScan(d, box) {
     <div class="actions">
       <button class="act" data-a="fix">${ICON.fix}Fix ID</button>
       <button class="act" data-a="listing">${ICON.list}Listing</button>
-      <button class="act ${d.share_id ? "on" : ""}" data-a="share">${ICON.share}Share</button>
+      <button class="act ${d.share_id ? "on" : ""}" data-a="share" ${guestMode() ? 'style="opacity:.45"' : ""}>${ICON.share}Share</button>
       <button class="act" data-a="delete">${ICON.trash}Delete</button>
     </div>
     <div id="panel"></div>
@@ -613,7 +703,7 @@ function paintProfile() {
     <div class="prof">
       <button class="ava" id="avaBtn" aria-label="Change avatar">${esc(me.avatar)}</button>
       <div><div class="nm">${esc(me.display_name)}${me.is_owner ? '<span class="badge">Owner</span>' : ""}</div>
-      <div class="un">@${esc(me.username)}${since ? " · since " + since : ""}</div></div>
+      <div class="un">${me.guest ? "Saved on this phone" : "@" + esc(me.username) + (since ? " · since " + since : "")}</div></div>
     </div>
     <div id="avaPick"></div>
 
@@ -645,16 +735,17 @@ function paintProfile() {
     <div class="sec"><h3>Account</h3><div class="group">
       <button class="item" id="pName"><div class="ic">${ICON.user}</div><div class="lb">Display name</div><div class="vl">${esc(me.display_name)}</div><div class="chev">›</div></button>
       <div id="nameBody"></div>
-      <button class="item" id="pPass"><div class="ic">${ICON.key}</div><div class="lb">Change password</div><div class="chev">›</div></button>
+      ${me.guest ? "" : `<button class="item" id="pPass"><div class="ic">${ICON.key}</div><div class="lb">Change password</div><div class="chev">›</div></button>`}
       <div id="passBody"></div>
       <button class="item" id="pExport"><div class="ic">${ICON.dl}</div><div class="lb">Export items (CSV)</div><div class="chev">›</div></button>
       <button class="item" id="pTips"><div class="ic">${ICON.bulb}</div><div class="lb">Show photo tips again</div><div class="chev">›</div></button>
       <div class="item"><div class="ic">⚡</div><div class="lb">AI scans today</div><div class="vl">${cfg.remaining == null ? "Unlimited" : `${cfg.remaining} of ${cfg.perDay} left`}</div></div>
     </div></div>
 
+    ${me.guest ? `<div class="card" style="margin-top:22px;font-size:14px"><b>Accounts are coming soon.</b><br><span class="muted">For now your items are saved on this phone only. Once accounts switch on, you'll get a username and sync across devices.</span></div>` : `
     <button class="ghost" id="pOut" style="margin-top:22px">Sign out</button>
     <button class="ghost danger" id="pDel">Delete my account</button>
-    <div id="delBody"></div>
+    <div id="delBody"></div>`}
     <div class="dim" style="text-align:center;font-size:12px;margin-top:18px">Sales Previews · prices are estimates, always double-check sold comps.</div>`;
 
   $("avaBtn").onclick = () => {
@@ -682,7 +773,7 @@ function paintProfile() {
       catch (er) { toast(er.message); }
     };
   };
-  $("pPass").onclick = () => {
+  if ($("pPass")) $("pPass").onclick = () => {
     const b = $("passBody");
     if (b.innerHTML) { b.innerHTML = ""; return; }
     b.innerHTML = `<div class="item-body">
@@ -696,6 +787,7 @@ function paintProfile() {
   };
   $("pExport").onclick = exportCsv;
   $("pTips").onclick = () => { setSetting("tipsDone", false); renderTips(); view("scan"); };
+  if (!$("pOut")) return;
   $("pOut").onclick = signOut;
   $("pDel").onclick = () => {
     const b = $("delBody");

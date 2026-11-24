@@ -97,21 +97,31 @@ async function auth(req, required = true) {
   return user;
 }
 
-async function usageToday(userId) {
+// Guest mode (no DATABASE_URL): no accounts, limits tracked in memory per IP
+const mem = { day: "", total: 0, by: new Map() };
+function memDay() { const d = new Date().toISOString().slice(0, 10); if (mem.day !== d) Object.assign(mem, { day: d, total: 0, by: new Map() }); }
+const guestUser = (req) => ({ guest: true, id: "ip:" + clientIp(req), is_owner: false });
+
+async function usageToday(user) {
+  if (user.guest) { memDay(); return { mine: mem.by.get(user.id) || 0, total: mem.total }; }
+  const userId = user.id;
   const { rows } = await db.query(
     `SELECT count(*) FILTER (WHERE user_id = $1) AS mine, count(*) AS total FROM ai_calls WHERE at >= date_trunc('day', now())`, [userId]);
   return { mine: +rows[0].mine, total: +rows[0].total };
 }
 async function takeQuota(user) {
   if (user.is_owner) return;
-  const u = await usageToday(user.id);
+  const u = await usageToday(user);
   if (u.mine >= PER_USER_DAILY) fail(429, `Daily limit reached (${PER_USER_DAILY} AI actions). Resets at midnight UTC.`);
   if (u.total >= GLOBAL_DAILY) fail(429, "The app hit its daily limit. Try again tomorrow.");
 }
-const logCall = (user, kind) => db.query("INSERT INTO ai_calls (user_id, kind) VALUES ($1, $2)", [user.id, kind]);
+const logCall = (user, kind) => {
+  if (user.guest) { memDay(); mem.by.set(user.id, (mem.by.get(user.id) || 0) + 1); mem.total++; return Promise.resolve(); }
+  return db.query("INSERT INTO ai_calls (user_id, kind) VALUES ($1, $2)", [user.id, kind]);
+};
 async function remainingFor(user) {
   if (user.is_owner) return null;
-  const u = await usageToday(user.id);
+  const u = await usageToday(user);
   return Math.max(0, PER_USER_DAILY - u.mine);
 }
 
@@ -223,7 +233,8 @@ async function getScan(user, id) {
 const cleanImg = (s, max) => (typeof s === "string" && /^data:image\/[a-z]+;base64,/i.test(s) && s.length <= max ? s : null);
 
 async function identify(req) {
-  const user = await auth(req);
+  const guest = !db.enabled();
+  const user = guest ? guestUser(req) : await auth(req);
   const data = await readBody(req);
   const images = Array.isArray(data.images) ? data.images.slice(0, 4) : [];
   const upc = String(data.upc || "").replace(/\D/g, "").slice(0, 14);
@@ -232,7 +243,8 @@ async function identify(req) {
   if (!images.length && !upc && !correction) fail(400, "Add a photo or a barcode");
   await takeQuota(user);
 
-  const prev = prevId ? await getScan(user, prevId) : null;
+  const prev = prevId && !guest ? await getScan(user, prevId) : null;
+  const prevData = prev ? json(prev.data) : guest && data.prev && typeof data.prev === "object" ? data.prev : {};
 
   const content = [];
   for (const u of images) {
@@ -256,7 +268,7 @@ async function identify(req) {
     if (gtinHits && gtinHits.items.length) text += `\neBay listings with this exact barcode:\n` + gtinHits.items.slice(0, 8).map((i) => `- ${i.title}${i.price ? ` ($${i.price})` : ""}`).join("\n");
     else if (!content.length) text += `\nNo eBay listings matched this barcode. Identify it from the barcode if you know it; otherwise set confidence "low" and say a photo is needed.`;
   }
-  const asked = data.price || (prev ? json(prev.data).asked : "") || "";
+  const asked = data.price || prevData.asked || "";
   if (asked) text += `\n\nPrice asked at the sale: $${String(asked).slice(0, 20)}`;
   if (data.notes) text += `\n\nNotes from the buyer: ${String(data.notes).slice(0, 500)}`;
   content.push({ type: "text", text });
@@ -264,7 +276,7 @@ async function identify(req) {
   const result = await claude(content);
   await logCall(user, correction ? "correct" : "identify");
   if (upc) result.upc = upc;
-  else if (prev && json(prev.data).upc) result.upc = json(prev.data).upc;
+  else if (prevData.upc) result.upc = prevData.upc;
   if (correction) result.corrected = correction;
   result.asked = asked ? String(asked) : "";
 
@@ -281,6 +293,7 @@ async function identify(req) {
 
   const mid = Math.round(((+result.price_low || 0) + (+result.price_high || 0)) / 2);
   const ship = num(result.ship_estimate) ?? 10;
+  if (guest) return { ...result, est_sell: mid, ship, remaining: await remainingFor(user) };
   let row;
   if (prev) {
     ({ rows: [row] } = await db.query(
@@ -297,9 +310,11 @@ async function identify(req) {
 }
 
 async function listingDraft(req, id) {
-  const user = await auth(req);
-  const row = await getScan(user, id);
-  const d = json(row.data);
+  const guest = !db.enabled();
+  const user = guest ? guestUser(req) : await auth(req);
+  let row, d;
+  if (guest) { const b = await readBody(req); d = b.scan && typeof b.scan === "object" ? b.scan : fail(400, "Missing item"); row = { notes: String(d.notes || "").slice(0, 1000) }; }
+  else { row = await getScan(user, id); d = json(row.data); }
   if (d.listing) return d.listing;
   await takeQuota(user);
   const listing = await claude([{ type: "text", text:
@@ -323,6 +338,7 @@ Reply with ONLY JSON:
 }` }], 900);
   if (listing.title) listing.title = String(listing.title).slice(0, 80);
   await logCall(user, "listing");
+  if (guest) return listing;
   d.listing = listing;
   await db.query("UPDATE scans SET data = $1 WHERE id = $2", [d, +row.id]);
   return listing;
@@ -340,7 +356,12 @@ async function route(req, res, url) {
   }
   if (p === "/api/config") return send(res, 200, { inviteRequired: CODES.length > 0, db: db.enabled(), perDay: PER_USER_DAILY, ebay: ebayOn() });
 
-  if (!db.enabled()) fail(503, "Database not set up yet");
+  if (!db.enabled()) {
+    if (p === "/api/identify" && m === "POST") return send(res, 200, await identify(req));
+    if (p === "/api/listing" && m === "POST") return send(res, 200, await listingDraft(req, 0));
+    if (p === "/api/guest" && m === "GET") { const g = guestUser(req); return send(res, 200, { remaining: await remainingFor(g), perDay: PER_USER_DAILY }); }
+    fail(503, "Accounts aren't switched on yet");
+  }
 
   // --- auth
   if (p === "/api/signup" && m === "POST") {
