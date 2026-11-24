@@ -3,100 +3,223 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#14532d">
+<meta name="theme-color" content="#0a0a0c">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Sales Previews">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg">
 <link rel="apple-touch-icon" href="/icon.svg">
 <title>Sales Previews</title>
 <style>
-  :root { --g:#14532d; --g2:#16a34a; --bg:#f5f5f0; --card:#fff; --ink:#1c1917; --mute:#78716c; --red:#b91c1c; --amber:#b45309; }
-  * { box-sizing:border-box; }
-  body { margin:0; font:16px/1.45 -apple-system,system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); padding-bottom:env(safe-area-inset-bottom); }
-  header { background:var(--g); color:#fff; padding:calc(14px + env(safe-area-inset-top)) 18px 14px; display:flex; justify-content:space-between; align-items:center; }
-  header h1 { font-size:20px; margin:0; letter-spacing:-.3px; }
-  header button { background:none; border:1px solid #ffffff66; color:#fff; border-radius:8px; padding:6px 10px; font-size:14px; }
-  main { padding:16px; max-width:560px; margin:auto; }
-  .card { background:var(--card); border-radius:14px; padding:16px; box-shadow:0 1px 3px #0001; margin-bottom:14px; }
-  .scan { width:100%; padding:22px; font-size:20px; font-weight:700; color:#fff; background:var(--g2); border:0; border-radius:14px; display:flex; gap:10px; justify-content:center; align-items:center; }
-  .scan:active { transform:scale(.98); }
-  .row { display:flex; gap:10px; margin-top:12px; }
-  input[type=number], input[type=text] { flex:1; padding:12px; font-size:16px; border:1px solid #d6d3d1; border-radius:10px; width:100%; }
-  .thumbs { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
-  .thumbs div { position:relative; }
-  .thumbs img { width:72px; height:72px; object-fit:cover; border-radius:10px; }
-  .thumbs b { position:absolute; top:-6px; right:-6px; background:#000c; color:#fff; width:22px; height:22px; border-radius:50%; text-align:center; font-size:14px; line-height:22px; }
-  .go { width:100%; margin-top:12px; padding:14px; font-size:17px; font-weight:700; background:var(--g); color:#fff; border:0; border-radius:12px; }
-  .go:disabled { opacity:.5; }
-  .ghost { background:none; border:1px dashed #a8a29e; color:var(--mute); padding:10px; border-radius:10px; width:100%; margin-top:10px; font-size:15px; }
-  .price { font-size:34px; font-weight:800; color:var(--g); letter-spacing:-1px; }
-  .verdict { display:inline-block; padding:4px 12px; border-radius:99px; font-weight:800; font-size:14px; color:#fff; }
-  .BUY { background:var(--g2); } .MAYBE { background:var(--amber); } .PASS { background:var(--red); }
-  .muted { color:var(--mute); font-size:14px; }
-  h2 { font-size:21px; margin:6px 0 2px; }
-  h3 { font-size:14px; text-transform:uppercase; letter-spacing:.5px; color:var(--mute); margin:16px 0 6px; }
-  ul { margin:0; padding-left:20px; }
-  .links { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-  .links a { flex:1 1 45%; text-align:center; padding:11px; border-radius:10px; background:#f0fdf4; color:var(--g); text-decoration:none; font-weight:600; font-size:15px; border:1px solid #bbf7d0; }
-  .err { color:var(--red); font-weight:600; }
-  .spin { width:38px; height:38px; border:4px solid #d1fae5; border-top-color:var(--g2); border-radius:50%; animation:s 0.8s linear infinite; margin:10px auto; }
-  @keyframes s { to { transform:rotate(360deg); } }
-  .hist { display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid #eee; }
-  .hist:last-child { border:0; }
-  .hist img { width:56px; height:56px; object-fit:cover; border-radius:8px; flex:none; }
-  .hist .t { flex:1; min-width:0; }
-  .hist .t div:first-child { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .hidden { display:none; }
-  .eb { display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid #eee; color:inherit; text-decoration:none; }
-  .eb img { width:54px; height:54px; object-fit:cover; border-radius:8px; flex:none; background:#eee; }
-  .eb .t { flex:1; min-width:0; font-size:14px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
-  .eb b { color:var(--g); }
+  :root{
+    --bg:#0a0a0c; --s1:#131317; --s2:#1b1b21; --s3:#24242c; --line:#2a2a33;
+    --ink:#f4f4f6; --mute:#8b8b98; --dim:#5d5d68;
+    --acc:#c8ff4d; --acc-ink:#0a0a0c; --acc-soft:rgba(200,255,77,.12);
+    --buy:#3ddc97; --maybe:#ffb547; --pass:#ff5d6c;
+    --r:20px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--ink)}
+  body{font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+  button,input{font:inherit;color:inherit}
+  a{color:inherit}
+  .wrap{max-width:540px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 18px 24px}
+  .hidden{display:none!important}
+
+  /* Top bar */
+  .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.3px;font-size:17px}
+  .logo{width:30px;height:30px;border-radius:9px;background:var(--acc);display:grid;place-items:center;color:var(--acc-ink);font-weight:900;font-size:16px}
+  .pill{font-size:12px;color:var(--mute);background:var(--s2);border:1px solid var(--line);padding:6px 10px;border-radius:99px}
+
+  h1{font-size:34px;line-height:1.05;letter-spacing:-1.2px;margin:0 0 8px;font-weight:800}
+  h1 em{font-style:normal;color:var(--acc)}
+  .lede{color:var(--mute);margin:0 0 26px;font-size:15px}
+
+  /* Capture */
+  .capture{position:relative;border-radius:28px;background:radial-gradient(120% 90% at 50% 0%,#1d1d24 0%,var(--s1) 60%);border:1px solid var(--line);padding:30px 20px 24px;text-align:center;overflow:hidden}
+  .capture::before{content:"";position:absolute;inset:16px;border-radius:18px;pointer-events:none;
+    background:
+      linear-gradient(var(--acc),var(--acc)) top left/22px 2px no-repeat,
+      linear-gradient(var(--acc),var(--acc)) top left/2px 22px no-repeat,
+      linear-gradient(var(--acc),var(--acc)) top right/22px 2px no-repeat,
+      linear-gradient(var(--acc),var(--acc)) top right/2px 22px no-repeat,
+      linear-gradient(var(--acc),var(--acc)) bottom left/22px 2px no-repeat,
+      linear-gradient(var(--acc),var(--acc)) bottom left/2px 22px no-repeat,
+      linear-gradient(var(--acc),var(--acc)) bottom right/22px 2px no-repeat,
+      linear-gradient(var(--acc),var(--acc)) bottom right/2px 22px no-repeat;opacity:.55}
+  .shutter{position:relative;width:104px;height:104px;border-radius:50%;border:0;background:transparent;margin:6px auto 14px;display:block;cursor:pointer}
+  .shutter::before{content:"";position:absolute;inset:0;border-radius:50%;border:3px solid var(--acc);opacity:.9}
+  .shutter::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 40px rgba(200,255,77,.35);transition:transform .15s}
+  .shutter:active::after{transform:scale(.9)}
+  .shutter svg{position:absolute;inset:0;margin:auto;z-index:1;width:34px;height:34px}
+  .cap-t{font-weight:700;font-size:17px}
+  .cap-s{color:var(--mute);font-size:13px;margin-top:2px}
+
+  /* Preview strip */
+  .tray{display:flex;gap:10px;overflow-x:auto;padding:16px 2px 2px;scrollbar-width:none}
+  .tray::-webkit-scrollbar{display:none}
+  .shot{position:relative;flex:none;width:84px;height:84px;border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+  .shot img{width:100%;height:100%;object-fit:cover;display:block}
+  .shot button{position:absolute;top:5px;right:5px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);color:#fff;font-size:14px;line-height:1}
+  .add{flex:none;width:84px;height:84px;border-radius:16px;border:1.5px dashed var(--line);background:transparent;color:var(--mute);font-size:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+  .add b{font-size:22px;color:var(--acc);font-weight:400}
+
+  /* Fields */
+  .fields{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;margin-top:16px}
+  .field{background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:10px 14px;transition:border-color .2s}
+  .field:focus-within{border-color:var(--acc)}
+  .field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);font-weight:600}
+  .field input{width:100%;background:none;border:0;outline:0;padding:2px 0 0;font-size:16px}
+  .field input::placeholder{color:var(--dim)}
+  .money{display:flex;align-items:center;gap:2px}.money span{color:var(--mute)}
+
+  .cta{width:100%;margin-top:14px;padding:17px;border:0;border-radius:18px;background:var(--acc);color:var(--acc-ink);font-weight:800;font-size:17px;letter-spacing:-.2px;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .1s,opacity .2s}
+  .cta:active{transform:scale(.98)}
+  .cta:disabled{opacity:.25}
+
+  /* Loading */
+  .scanning{margin-top:22px;border-radius:var(--r);overflow:hidden;position:relative;border:1px solid var(--line)}
+  .scanning img{width:100%;max-height:340px;object-fit:cover;display:block;filter:saturate(.6) brightness(.7)}
+  .scanning .beam{position:absolute;left:0;right:0;height:3px;background:var(--acc);box-shadow:0 0 24px 6px rgba(200,255,77,.45);animation:beam 1.6s ease-in-out infinite alternate}
+  @keyframes beam{from{top:4%}to{top:94%}}
+  .scanning .lbl{position:absolute;left:14px;bottom:14px;background:rgba(10,10,12,.75);backdrop-filter:blur(10px);padding:8px 12px;border-radius:12px;font-size:13px;font-weight:600}
+  .scanning .lbl i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--acc);margin-right:8px;animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.25}}
+
+  /* Result */
+  .res{margin-top:22px;animation:rise .35s ease-out}
+  @keyframes rise{from{opacity:0;transform:translateY(12px)}}
+  .hero{position:relative;border-radius:24px;overflow:hidden;background:var(--s1);border:1px solid var(--line)}
+  .hero img{width:100%;height:220px;object-fit:cover;display:block}
+  .hero .fade{position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(10,10,12,.95) 100%)}
+  .hero .over{position:absolute;left:18px;right:18px;bottom:16px}
+  .tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--mute);margin-bottom:4px}
+  .hero h2{margin:0;font-size:24px;line-height:1.15;letter-spacing:-.6px}
+  .verdict{position:absolute;top:14px;right:14px;font-weight:800;font-size:13px;letter-spacing:.6px;padding:7px 12px;border-radius:99px;color:#0a0a0c}
+  .v-BUY{background:var(--buy)} .v-MAYBE{background:var(--maybe)} .v-PASS{background:var(--pass)}
+
+  .val{margin-top:12px;background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+  .val .k{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);font-weight:600}
+  .val .big{font-size:38px;font-weight:800;letter-spacing:-1.5px;color:var(--acc);line-height:1.1;margin:4px 0}
+  .val .why{color:var(--mute);font-size:14px}
+  .reason{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:15px}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  .stat{background:var(--s1);border:1px solid var(--line);border-radius:16px;padding:12px}
+  .stat .k{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;font-weight:600}
+  .stat .v{font-size:19px;font-weight:750;margin-top:2px;letter-spacing:-.4px}
+
+  .sec{margin-top:26px}
+  .sec h3{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--mute);margin:0 0 10px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+  .sec h3 small{text-transform:none;letter-spacing:0;color:var(--dim);font-weight:500}
+  .card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+  .card p{margin:0}
+
+  .rail{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;margin:0 -18px;padding:0 18px 4px;scrollbar-width:none}
+  .rail::-webkit-scrollbar{display:none}
+  .lst{flex:none;width:156px;scroll-snap-align:start;background:var(--s1);border:1px solid var(--line);border-radius:18px;overflow:hidden;text-decoration:none}
+  .lst img{width:100%;height:132px;object-fit:cover;display:block;background:var(--s2)}
+  .lst div{padding:10px 11px 12px}
+  .lst b{color:var(--acc);font-size:16px;letter-spacing:-.3px}
+  .lst span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:12.5px;color:var(--mute);margin-top:3px;line-height:1.35}
+  .lst em{font-style:normal;font-size:11px;color:var(--dim)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:11px 14px;border-radius:14px;background:var(--s2);border:1px solid var(--line);text-decoration:none;font-size:14px;font-weight:600}
+  .chip.pri{background:var(--acc-soft);border-color:rgba(200,255,77,.35);color:var(--acc)}
+  .chip.plain{font-weight:500;padding:8px 12px;font-size:13px}
+
+  .checks{list-style:none;margin:0;padding:0}
+  .checks li{position:relative;padding:9px 0 9px 28px;border-bottom:1px solid var(--line);font-size:15px}
+  .checks li:last-child{border:0}
+  .checks li::before{content:"";position:absolute;left:2px;top:13px;width:14px;height:14px;border-radius:5px;border:2px solid var(--acc)}
+  .checks.red li::before{border-color:var(--pass);border-radius:50%}
+  .none{color:var(--dim);font-size:14px}
+  .note{color:var(--mute);font-size:14px}
+  .err{margin-top:22px;background:rgba(255,93,108,.1);border:1px solid rgba(255,93,108,.35);color:#ffb3ba;border-radius:16px;padding:14px 16px;font-size:15px}
+
+  /* History */
+  .h-item{display:flex;gap:14px;align-items:center;padding:12px;background:var(--s1);border:1px solid var(--line);border-radius:18px;margin-bottom:10px;width:100%;text-align:left}
+  .h-item img{width:60px;height:60px;border-radius:12px;object-fit:cover;flex:none;background:var(--s2)}
+  .h-item .t{flex:1;min-width:0}
+  .h-item .n{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .h-item .m{font-size:13px;color:var(--mute);margin-top:2px}
+  .h-item .p{color:var(--acc);font-weight:750;font-size:15px;white-space:nowrap}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:1px}
+  .empty{text-align:center;padding:60px 20px;color:var(--mute)}
+  .empty b{display:block;font-size:40px;margin-bottom:8px}
+  .ghost{width:100%;margin-top:8px;background:none;border:1px solid var(--line);border-radius:14px;padding:13px;color:var(--mute);font-size:14px}
+
+  /* Tab bar */
+  .tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom));display:flex;gap:4px;padding:6px;background:rgba(27,27,33,.82);backdrop-filter:blur(18px) saturate(1.4);-webkit-backdrop-filter:blur(18px) saturate(1.4);border:1px solid var(--line);border-radius:99px;z-index:10;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  .tab{border:0;background:none;color:var(--mute);padding:11px 22px;border-radius:99px;font-weight:650;font-size:14px;display:flex;align-items:center;gap:7px}
+  .tab.on{background:var(--acc);color:var(--acc-ink)}
+  .tab svg{width:18px;height:18px}
 </style>
 </head>
 <body>
-<header>
-  <h1>📸 Sales Previews</h1>
-  <button id="histBtn">History</button>
-</header>
-<main>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><div class="logo">$</div>Sales Previews</div>
+    <div class="pill" id="count">0 scans</div>
+  </div>
+
+  <!-- SCAN -->
   <section id="scanView">
-    <div class="card">
-      <button class="scan" id="camBtn">📷 Scan an item</button>
-      <input type="file" id="cam" accept="image/*" capture="environment" class="hidden">
-      <input type="file" id="lib" accept="image/*" multiple class="hidden">
-      <div class="thumbs" id="thumbs"></div>
-      <button class="ghost" id="moreBtn">+ Add another angle / label photo</button>
-      <div class="row">
-        <input type="number" id="price" inputmode="decimal" placeholder="Asking price $ (optional)">
-      </div>
-      <div class="row">
-        <input type="text" id="notes" placeholder="Notes: markings, works?, etc. (optional)">
-      </div>
-      <button class="go" id="goBtn" disabled>Identify &amp; price it</button>
+    <h1>What's it <em>worth?</em></h1>
+    <p class="lede">Snap anything at a yard or estate sale. Get an ID, a price and live eBay matches in seconds.</p>
+
+    <div class="capture">
+      <button class="shutter" id="camBtn" aria-label="Take photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a0c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      </button>
+      <div class="cap-t" id="capT">Tap to scan an item</div>
+      <div class="cap-s">Add up to 4 photos: front, back, labels, marks</div>
+      <div class="tray hidden" id="tray"></div>
     </div>
+    <input type="file" id="cam" accept="image/*" capture="environment" class="hidden">
+    <input type="file" id="lib" accept="image/*" multiple class="hidden">
+
+    <div class="fields">
+      <div class="field"><label>Asking</label><div class="money"><span>$</span><input type="number" id="price" inputmode="decimal" placeholder="0"></div></div>
+      <div class="field"><label>Notes</label><input type="text" id="notes" placeholder="Works? Markings?"></div>
+    </div>
+
+    <button class="cta" id="goBtn" disabled>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      Identify &amp; price it
+    </button>
+
     <div id="result"></div>
   </section>
 
+  <!-- HISTORY -->
   <section id="histView" class="hidden">
-    <div class="card">
-      <h3 style="margin-top:0">Past scans</h3>
-      <div id="histList"></div>
-      <button class="ghost" id="clearBtn">Clear history</button>
-    </div>
+    <h1>Your <em>scans</em></h1>
+    <p class="lede">Saved on this phone. Tap one to see it again.</p>
+    <div id="histList"></div>
   </section>
-</main>
+</div>
+
+<nav class="tabs">
+  <button class="tab on" data-v="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg>Scan</button>
+  <button class="tab" data-v="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>History</button>
+</nav>
 
 <script>
 const $ = (id) => document.getElementById(id);
-let photos = []; // data URLs
+let photos = [];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const money = (n) => "$" + Math.round(Number(n) || 0).toLocaleString();
+const VC = { BUY:"var(--buy)", MAYBE:"var(--maybe)", PASS:"var(--pass)" };
 
-function loadHist() { try { return JSON.parse(localStorage.getItem("scans") || "[]"); } catch { return []; } }
-function saveHist(h) { try { localStorage.setItem("scans", JSON.stringify(h.slice(0, 100))); } catch {} }
+function loadHist(){ try { return JSON.parse(localStorage.getItem("scans") || "[]"); } catch { return []; } }
+function saveHist(h){ try { localStorage.setItem("scans", JSON.stringify(h.slice(0, 100))); } catch {} updCount(); }
+function updCount(){ const n = loadHist().length; $("count").textContent = n + (n === 1 ? " scan" : " scans"); }
 
-function shrink(file, max = 1280, q = 0.82) {
+function resize(src, max, q){
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -104,122 +227,147 @@ function shrink(file, max = 1280, q = 0.82) {
       const c = document.createElement("canvas");
       c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(img.src);
       resolve(c.toDataURL("image/jpeg", q));
     };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
+    img.onerror = reject; img.src = src;
   });
 }
-
-async function addFiles(files) {
-  for (const f of files) { if (photos.length < 4) photos.push(await shrink(f)); }
-  renderThumbs();
+async function addFiles(files){
+  for (const f of files) {
+    if (photos.length >= 4) break;
+    const u = URL.createObjectURL(f);
+    photos.push(await resize(u, 1280, 0.82));
+    URL.revokeObjectURL(u);
+  }
+  renderTray();
 }
-function renderThumbs() {
-  $("thumbs").innerHTML = photos.map((p, i) => `<div><img src="${p}"><b data-i="${i}">×</b></div>`).join("");
+function renderTray(){
+  const t = $("tray");
+  t.classList.toggle("hidden", !photos.length);
+  t.innerHTML = photos.map((p, i) => `<div class="shot"><img src="${p}"><button data-i="${i}" aria-label="Remove">×</button></div>`).join("")
+    + (photos.length && photos.length < 4 ? `<button class="add" id="addBtn"><b>+</b>Angle</button>` : "");
   $("goBtn").disabled = !photos.length;
-  $("camBtn").textContent = photos.length ? "📷 Retake / new item" : "📷 Scan an item";
+  $("capT").textContent = photos.length ? "Tap to start a new item" : "Tap to scan an item";
 }
-$("thumbs").onclick = (e) => { const i = e.target.dataset.i; if (i != null) { photos.splice(+i, 1); renderThumbs(); } };
-$("camBtn").onclick = () => { photos = []; renderThumbs(); $("result").innerHTML = ""; $("cam").click(); };
-$("moreBtn").onclick = () => $("lib").click();
+$("tray").onclick = (e) => {
+  if (e.target.closest("#addBtn")) return $("lib").click();
+  const i = e.target.dataset.i; if (i != null) { photos.splice(+i, 1); renderTray(); }
+};
+$("camBtn").onclick = () => { photos = []; renderTray(); $("result").innerHTML = ""; $("price").value = ""; $("notes").value = ""; $("cam").click(); };
 $("cam").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
 $("lib").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
 
 $("goBtn").onclick = async () => {
   $("goBtn").disabled = true;
-  $("result").innerHTML = `<div class="card" style="text-align:center"><div class="spin"></div><div class="muted">Identifying and pricing…</div></div>`;
+  $("result").innerHTML = `<div class="scanning"><img src="${photos[0]}"><div class="beam"></div><div class="lbl"><i></i>Identifying &amp; checking eBay…</div></div>`;
+  $("result").scrollIntoView({ behavior:"smooth", block:"start" });
   try {
-    const r = await fetch("/api/identify", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ images: photos, price: $("price").value, notes: $("notes").value }),
-    });
+    const r = await fetch("/api/identify", { method:"POST", headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ images: photos, price: $("price").value, notes: $("notes").value }) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || "Something went wrong");
     d.asked = $("price").value; d.when = Date.now();
-    const thumb = await shrinkData(photos[0], 160);
-    const h = loadHist(); h.unshift({ ...d, thumb }); saveHist(h);
+    d.photo = await resize(photos[0], 720, 0.75);
+    d.thumb = await resize(photos[0], 160, 0.6);
+    const h = loadHist(); h.unshift(d); saveHist(h);
     showResult(d);
   } catch (e) {
-    $("result").innerHTML = `<div class="card err">⚠️ ${esc(e.message)}</div>`;
+    $("result").innerHTML = `<div class="err">⚠️ ${esc(e.message)}</div>`;
   }
   $("goBtn").disabled = false;
 };
 
-function shrinkData(dataUrl, max) {
-  return new Promise((res) => { const img = new Image(); img.onload = () => {
-    const s = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement("canvas");
-    c.width = img.width * s; c.height = img.height * s; c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-    res(c.toDataURL("image/jpeg", 0.6)); }; img.src = dataUrl; });
-}
+const listCard = (i) => `
+  <a class="lst" target="_blank" rel="noopener" href="${esc(i.url)}">
+    <img src="${esc(i.image || "")}" loading="lazy" alt="" onerror="this.style.visibility='hidden'">
+    <div><b>${i.price ? money(i.price) : "—"}</b><span>${esc(i.title)}</span>
+    <em>${esc(i.condition || "")}${(i.buyingOptions||[]).includes("AUCTION") ? " · Auction" : ""}</em></div>
+  </a>`;
+const checks = (arr, red) => arr && arr.length ? `<ul class="checks ${red ? "red" : ""}">${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="none">Nothing flagged</div>`;
 
-function list(arr) { return arr && arr.length ? `<ul>${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="muted">None noted</div>`; }
-
-function items(arr) {
-  return arr.slice(0, 8).map((i) => `
-    <a class="eb" target="_blank" rel="noopener" href="${esc(i.url)}">
-      <img src="${esc(i.image || "")}" loading="lazy">
-      <span class="t">${esc(i.title)}<br><span class="muted">${esc(i.condition || "")}${(i.buyingOptions||[]).includes("AUCTION") ? " · auction" : ""}</span></span>
-      <b>${i.price ? money(i.price) : ""}</b>
-    </a>`).join("");
-}
-function ebayBlock(e) {
-  if (!e) return "";
-  if (e.error) return `<h3>eBay</h3><div class="muted">${esc(e.error)}</div>`;
-  let h = `<h3>On eBay right now</h3>`;
-  if (e.stats) h += `<div><b>${e.total.toLocaleString()}</b> active listings · asking ${money(e.stats.low)}–${money(e.stats.high)}, median <b>${money(e.stats.median)}</b></div>`;
-  else h += `<div class="muted">No matching active listings found.</div>`;
-  if (e.image && e.image.length) h += `<h3>📷 Visual matches</h3>${items(e.image)}`;
-  if (e.keyword && e.keyword.length) h += `<h3>🔎 Keyword matches</h3>${items(e.keyword)}`;
-  return h;
-}
-
-function showResult(d) {
-  const q = encodeURIComponent(d.search_query || d.item || "");
+function showResult(d){
   const v = ["BUY","MAYBE","PASS"].includes(d.verdict) ? d.verdict : "MAYBE";
+  const q = encodeURIComponent(d.search_query || d.item || "");
+  const e = d.ebay || {};
+  const st = e.stats;
+  let ebay = "";
+  if (e.error) ebay = `<div class="sec"><h3>eBay</h3><div class="card note">${esc(e.error)}</div></div>`;
+  else {
+    if (e.image && e.image.length) ebay += `<div class="sec"><h3>Looks like this <small>visual matches</small></h3><div class="rail">${e.image.slice(0,10).map(listCard).join("")}</div></div>`;
+    if (e.keyword && e.keyword.length) ebay += `<div class="sec"><h3>Listed now <small>${(e.total||0).toLocaleString()} on eBay</small></h3><div class="rail">${e.keyword.slice(0,10).map(listCard).join("")}</div></div>`;
+    if (!ebay) ebay = `<div class="sec"><h3>eBay</h3><div class="card note">No matching active listings found.</div></div>`;
+  }
+
   $("result").innerHTML = `
-  <div class="card">
-    <div class="muted">${esc(d.category)} · ${esc(d.confidence)} confidence</div>
-    <h2>${esc(d.item)}</h2>
-    <div class="price">${money(d.price_low)} – ${money(d.price_high)}</div>
-    <div class="muted">${esc(d.price_basis)}</div>
-    <p><span class="verdict ${v}">${v}</span> ${d.asked ? `<span class="muted">asking ${money(d.asked)}</span>` : ""}<br>${esc(d.verdict_reason)}</p>
-    <p>${esc(d.description)}</p>
-    ${ebayBlock(d.ebay)}
-    <h3>Check sold prices</h3>
-    <div class="links">
-      <a target="_blank" rel="noopener" href="https://www.ebay.com/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1">eBay sold</a>
-      <a target="_blank" rel="noopener" href="https://www.google.com/search?tbm=shop&q=${q}">Google Shopping</a>
-      <a target="_blank" rel="noopener" href="https://www.facebook.com/marketplace/search/?query=${q}">FB Marketplace</a>
-      <a target="_blank" rel="noopener" href="https://www.worthpoint.com/search?query=${q}">WorthPoint</a>
+  <div class="res">
+    <div class="hero">
+      ${d.photo ? `<img src="${d.photo}" alt="">` : `<div style="height:120px"></div>`}
+      <div class="fade"></div>
+      <div class="verdict v-${v}">${v}</div>
+      <div class="over">
+        <div class="tag">${esc(d.category)} · ${esc(d.confidence)} confidence</div>
+        <h2>${esc(d.item)}</h2>
+      </div>
     </div>
-    <h3>Best places to sell</h3><div>${esc((d.best_platforms || []).join(", "))}</div>
-    <h3>Condition</h3><div>${esc(d.condition_notes)}</div>
-    <h3>Check before buying</h3>${list(d.check_before_buying)}
-    <h3>Red flags</h3>${list(d.red_flags)}
+
+    <div class="val">
+      <div class="k">Est. resale value</div>
+      <div class="big">${money(d.price_low)}–${money(d.price_high)}</div>
+      <div class="why">${esc(d.price_basis)}</div>
+      <div class="reason">${esc(d.verdict_reason)}</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">Asking</div><div class="v">${d.asked ? money(d.asked) : "—"}</div></div>
+      <div class="stat"><div class="k">eBay median</div><div class="v">${st ? money(st.median) : "—"}</div></div>
+      <div class="stat"><div class="k">Listed</div><div class="v">${st ? (e.total||st.count).toLocaleString() : "—"}</div></div>
+    </div>
+
+    ${ebay}
+
+    <div class="sec"><h3>Check sold prices</h3>
+      <div class="chips">
+        <a class="chip pri" target="_blank" rel="noopener" href="https://www.ebay.com/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1">eBay sold ↗</a>
+        <a class="chip" target="_blank" rel="noopener" href="https://www.worthpoint.com/search?query=${q}">WorthPoint ↗</a>
+        <a class="chip" target="_blank" rel="noopener" href="https://www.google.com/search?tbm=shop&q=${q}">Google ↗</a>
+        <a class="chip" target="_blank" rel="noopener" href="https://www.facebook.com/marketplace/search/?query=${q}">Marketplace ↗</a>
+      </div>
+    </div>
+
+    <div class="sec"><h3>About it</h3><div class="card"><p>${esc(d.description)}</p></div></div>
+    ${(d.best_platforms||[]).length ? `<div class="sec"><h3>Best places to sell</h3><div class="chips">${d.best_platforms.map((p) => `<span class="chip plain">${esc(p)}</span>`).join("")}</div></div>` : ""}
+    <div class="sec"><h3>Check before buying</h3><div class="card">${checks(d.check_before_buying)}</div></div>
+    <div class="sec"><h3>Red flags</h3><div class="card">${checks(d.red_flags, true)}</div></div>
+    <div class="sec"><h3>Condition</h3><div class="card"><p class="note">${esc(d.condition_notes)}</p></div></div>
   </div>`;
-  $("result").scrollIntoView({ behavior: "smooth" });
 }
 
-function showHist() {
+function showHist(){
   const h = loadHist();
   $("histList").innerHTML = h.length ? h.map((d, i) => `
-    <div class="hist" data-i="${i}">
-      <img src="${d.thumb || ""}">
-      <div class="t"><div>${esc(d.item)}</div><div class="muted">${money(d.price_low)}–${money(d.price_high)} · ${esc(d.verdict)} · ${new Date(d.when).toLocaleDateString()}</div></div>
-    </div>`).join("") : `<div class="muted">No scans yet.</div>`;
+    <button class="h-item" data-i="${i}">
+      <img src="${d.thumb || ""}" alt="">
+      <div class="t"><div class="n">${esc(d.item)}</div>
+      <div class="m"><span class="dot" style="background:${VC[d.verdict] || VC.MAYBE}"></span>${esc(d.verdict)} · ${new Date(d.when).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</div></div>
+      <div class="p">${money(d.price_low)}–${money(d.price_high)}</div>
+    </button>`).join("") + `<button class="ghost" id="clearBtn">Clear history</button>`
+    : `<div class="empty"><b>📸</b>No scans yet. Your finds will show up here.</div>`;
 }
 $("histList").onclick = (e) => {
-  const el = e.target.closest(".hist"); if (!el) return;
-  const d = loadHist()[+el.dataset.i]; toggle(false); showResult(d);
+  if (e.target.id === "clearBtn") { if (confirm("Clear all scans?")) { saveHist([]); showHist(); } return; }
+  const el = e.target.closest(".h-item"); if (!el) return;
+  view("scan"); showResult(loadHist()[+el.dataset.i]);
+  setTimeout(() => $("result").scrollIntoView({ behavior:"smooth" }), 50);
 };
-function toggle(hist) {
-  $("scanView").classList.toggle("hidden", hist); $("histView").classList.toggle("hidden", !hist);
-  $("histBtn").textContent = hist ? "Scan" : "History"; if (hist) showHist();
+function view(v){
+  $("scanView").classList.toggle("hidden", v !== "scan");
+  $("histView").classList.toggle("hidden", v !== "hist");
+  document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t.dataset.v === v));
+  if (v === "hist") showHist();
+  window.scrollTo({ top:0 });
 }
-$("histBtn").onclick = () => toggle($("histView").classList.contains("hidden"));
-$("clearBtn").onclick = () => { saveHist([]); showHist(); };
+document.querySelectorAll(".tab").forEach((t) => t.onclick = () => view(t.dataset.v));
+updCount();
 </script>
 </body>
 </html>
