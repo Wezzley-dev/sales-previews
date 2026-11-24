@@ -15,6 +15,14 @@ Snap a photo of an item at a yard sale, estate sale or thrift store and get:
   - `EBAY_CLIENT_ID`, `EBAY_CLIENT_SECRET` (recommended) — Production keyset from developer.ebay.com; enables live eBay listings + photo search
   - `MODEL` (optional, defaults to `claude-sonnet-5-5`)
 
+### Sharing safely (protects your API bill)
+- `ACCESS_CODES`: comma-separated invite codes, e.g. `mom,jake,flipcrew`. If it's empty, anyone with the link can scan (still rate-limited per IP).
+- `OWNER_CODE`: your personal code, with no daily limit.
+- `DAILY_LIMIT_PER_USER` (default 40) and `DAILY_LIMIT_TOTAL` (default 400): caps reset daily, and on restart.
+
+### Features
+Photo ID and pricing, barcode/UPC scan with exact eBay match, profit calculator (fees, shipping, ROI, max to pay), estate sale "Haul" totals, scan history.
+
 eBay's public API only returns active listings. Sold prices open via the "eBay sold" link (eBay's sold-data API is restricted).
 
 No dependencies. Open the site on your phone and use "Add to Home Screen" so it works like an app.

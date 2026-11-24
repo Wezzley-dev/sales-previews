@@ -157,19 +157,89 @@
   .tab{border:0;background:none;color:var(--mute);padding:11px 22px;border-radius:99px;font-weight:650;font-size:14px;display:flex;align-items:center;gap:7px}
   .tab.on{background:var(--acc);color:var(--acc-ink)}
   .tab svg{width:18px;height:18px}
+  .tab{padding:11px 16px;white-space:nowrap}
+  #haulN:empty{display:none}
+  #haulN{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--acc);color:var(--acc-ink);font-size:11px;font-weight:800;display:inline-grid;place-items:center}
+  .tab.on #haulN{background:var(--acc-ink);color:var(--acc)}
+
+  /* Top bar extras */
+  .top-r{display:flex;gap:8px;align-items:center}
+  .icon-btn{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--s2);display:grid;place-items:center;color:var(--mute)}
+  .icon-btn svg{width:17px;height:17px}
+
+  /* Barcode field */
+  .fields2{grid-template-columns:1fr;margin-top:10px}
+  .bc{display:flex;align-items:center;gap:8px}
+  .bc input{flex:1;letter-spacing:1px}
+  .bc button{flex:none;border:0;border-radius:12px;background:var(--acc-soft);color:var(--acc);font-weight:700;font-size:13px;padding:8px 12px;display:flex;gap:6px;align-items:center}
+  .bc button svg{width:16px;height:16px}
+  .bc-msg{font-size:12px;color:var(--mute);margin-top:6px;min-height:0}
+  .bc-msg.ok{color:var(--acc)}
+
+  /* Profit */
+  .calc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .calc .field{padding:8px 11px;border-radius:14px;background:var(--s2)}
+  .calc .field input{font-size:17px;font-weight:650}
+  .profit{display:flex;align-items:flex-end;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  .profit .k{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);font-weight:600}
+  .profit .net{font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1.1}
+  .profit .roi{font-size:13px;color:var(--mute)}
+  .pos{color:var(--buy)} .neg{color:var(--pass)}
+  .maxpay{text-align:right}
+  .maxpay .v{font-size:22px;font-weight:800;color:var(--acc);letter-spacing:-.5px}
+  .breakdown{font-size:12.5px;color:var(--dim);margin-top:10px}
+  .haul-btn{width:100%;margin-top:14px;padding:14px;border-radius:14px;border:1px solid rgba(200,255,77,.35);background:var(--acc-soft);color:var(--acc);font-weight:750;font-size:15px}
+  .haul-btn.done{background:var(--s2);border-color:var(--line);color:var(--mute)}
+
+  /* Haul */
+  .haul-top{background:linear-gradient(135deg,#1e2a0c 0%,var(--s1) 70%);border:1px solid rgba(200,255,77,.25);border-radius:24px;padding:18px;margin-bottom:14px}
+  .haul-top .k{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--mute);font-weight:600}
+  .haul-top .big{font-size:40px;font-weight:850;letter-spacing:-1.5px;line-height:1.1;margin:4px 0 12px}
+  .haul-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .haul-grid div{background:rgba(10,10,12,.45);border-radius:14px;padding:10px}
+  .haul-grid .k{font-size:10.5px}
+  .haul-grid b{display:block;font-size:17px;margin-top:2px}
+  .hl{display:flex;gap:12px;align-items:center;padding:12px;background:var(--s1);border:1px solid var(--line);border-radius:18px;margin-bottom:10px}
+  .hl img{width:52px;height:52px;border-radius:12px;object-fit:cover;flex:none;background:var(--s2)}
+  .hl .t{flex:1;min-width:0}
+  .hl .n{font-weight:650;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .hl .m{font-size:12.5px;color:var(--mute);margin-top:2px}
+  .hl .p{font-weight:800;font-size:15px;text-align:right}
+  .hl .x{border:0;background:none;color:var(--dim);font-size:20px;padding:4px 2px 4px 8px}
+
+  /* Lock + sheet */
+  .lock{position:fixed;inset:0;z-index:50;background:var(--bg);display:flex;flex-direction:column;justify-content:center;padding:28px;padding-top:env(safe-area-inset-top)}
+  .lock .logo{width:56px;height:56px;border-radius:16px;font-size:28px;margin-bottom:22px}
+  .lock .field{margin-top:18px}
+  .lock .field input{font-size:20px;letter-spacing:1px}
+  .lock .err{margin-top:12px}
+  .sheet-bg{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--s1);border-top:1px solid var(--line);border-radius:26px 26px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom));max-width:540px;margin:0 auto;animation:up .25s ease-out}
+  @keyframes up{from{transform:translateY(100%)}}
+  .sheet .grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 16px}
+  .sheet h2{margin:0 0 14px;font-size:20px}
+  .sheet .field{margin-bottom:10px;background:var(--s2)}
+  .sheet .hint{font-size:12.5px;color:var(--dim);margin:-4px 0 12px}
+  .seg{display:flex;background:var(--s2);border:1px solid var(--line);border-radius:14px;padding:4px;gap:4px;margin-bottom:10px}
+  .seg button{flex:1;border:0;background:none;color:var(--mute);padding:9px 4px;border-radius:10px;font-size:13.5px;font-weight:650}
+  .seg button.on{background:var(--acc);color:var(--acc-ink)}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js" defer></script>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">$</div>Sales Previews</div>
-    <div class="pill" id="count">0 scans</div>
+    <div class="top-r">
+      <div class="pill" id="count">0 scans</div>
+      <button class="icon-btn" id="gear" aria-label="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>
+    </div>
   </div>
 
   <!-- SCAN -->
   <section id="scanView">
     <h1>What's it <em>worth?</em></h1>
-    <p class="lede">Snap anything at a yard or estate sale. Get an ID, a price and live eBay matches in seconds.</p>
+    <p class="lede">Snap anything at a yard or estate sale. Get an ID, a price, your profit and live eBay matches in seconds.</p>
 
     <div class="capture">
       <button class="shutter" id="camBtn" aria-label="Take photo">
@@ -181,7 +251,18 @@
     </div>
     <input type="file" id="cam" accept="image/*" capture="environment" class="hidden">
     <input type="file" id="lib" accept="image/*" multiple class="hidden">
+    <input type="file" id="bcam" accept="image/*" capture="environment" class="hidden">
 
+    <div class="fields fields2">
+      <div class="field">
+        <label>Barcode · optional, best for books, games, electronics</label>
+        <div class="bc">
+          <input type="text" id="upc" inputmode="numeric" placeholder="Scan or type UPC" autocomplete="off">
+          <button id="bcBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 5v14M8 5v14M11 5v14M15 5v14M18 5v14M21 5v14"/></svg>Scan</button>
+        </div>
+        <div class="bc-msg" id="bcMsg"></div>
+      </div>
+    </div>
     <div class="fields">
       <div class="field"><label>Asking</label><div class="money"><span>$</span><input type="number" id="price" inputmode="decimal" placeholder="0"></div></div>
       <div class="field"><label>Notes</label><input type="text" id="notes" placeholder="Works? Markings?"></div>
@@ -195,6 +276,13 @@
     <div id="result"></div>
   </section>
 
+  <!-- HAUL -->
+  <section id="haulView" class="hidden">
+    <h1>Today's <em>haul</em></h1>
+    <p class="lede">Everything you've added at this sale, with what you spent and what it should bring.</p>
+    <div id="haulBody"></div>
+  </section>
+
   <!-- HISTORY -->
   <section id="histView" class="hidden">
     <h1>Your <em>scans</em></h1>
@@ -205,20 +293,108 @@
 
 <nav class="tabs">
   <button class="tab on" data-v="scan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="12" r="3"/></svg>Scan</button>
+  <button class="tab" data-v="haul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h12l-1 13H7L6 7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>Haul<span id="haulN"></span></button>
   <button class="tab" data-v="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg>History</button>
 </nav>
+
+<!-- Invite code -->
+<div class="lock hidden" id="lock">
+  <div class="logo">$</div>
+  <h1>Welcome to <em>Sales Previews</em></h1>
+  <p class="lede" style="margin:0">Enter the invite code you were given to start scanning.</p>
+  <div class="field"><label>Invite code</label><input type="text" id="codeIn" autocapitalize="none" autocomplete="off" placeholder="Your code"></div>
+  <div id="lockErr"></div>
+  <button class="cta" id="codeBtn">Unlock</button>
+</div>
+
+<!-- Settings sheet -->
+<div id="sheetWrap" class="hidden">
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>Profit settings</h2>
+    <div class="field"><label>Selling fees %</label><input type="number" id="setFee" inputmode="decimal" step="0.1"></div>
+    <div class="hint">eBay is about 13.25% for most categories, plus about $0.40 per order.</div>
+    <label style="font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);font-weight:600;display:block;margin-bottom:6px">"Max to pay" means I want at least…</label>
+    <div class="seg" id="setRoi">
+      <button data-r="0.5">+50%</button><button data-r="1">2× money</button><button data-r="2">3× money</button>
+    </div>
+    <div class="hint" id="usageHint"></div>
+    <button class="ghost" id="lockOut">Change invite code</button>
+    <button class="cta" id="sheetDone">Done</button>
+  </div>
+</div>
 
 <script>
 const $ = (id) => document.getElementById(id);
 let photos = [];
+let current = null; // result being shown
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-const money = (n) => "$" + Math.round(Number(n) || 0).toLocaleString();
+const money = (n) => (n < 0 ? "-$" : "$") + Math.abs(Math.round(Number(n) || 0)).toLocaleString();
 const VC = { BUY:"var(--buy)", MAYBE:"var(--maybe)", PASS:"var(--pass)" };
 
-function loadHist(){ try { return JSON.parse(localStorage.getItem("scans") || "[]"); } catch { return []; } }
-function saveHist(h){ try { localStorage.setItem("scans", JSON.stringify(h.slice(0, 100))); } catch {} updCount(); }
-function updCount(){ const n = loadHist().length; $("count").textContent = n + (n === 1 ? " scan" : " scans"); }
+// ---------- storage ----------
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+const settings = () => Object.assign({ fee: 13.25, roi: 1 }, store.get("settings", {}));
+const code = () => store.get("code", "");
+let remainingToday = null;
 
+function updCount(){
+  const n = store.get("scans", []).length;
+  $("count").textContent = remainingToday != null ? `${remainingToday} left today` : n + (n === 1 ? " scan" : " scans");
+  const h = store.get("haul", []).length;
+  $("haulN").textContent = h ? String(h) : "";
+}
+
+// ---------- invite code ----------
+async function loadConfig(){
+  try {
+    const r = await fetch("/api/config", { headers: { "X-Access-Code": code() } });
+    const c = await r.json();
+    if (c.codeRequired && !c.unlocked) $("lock").classList.remove("hidden");
+    remainingToday = c.owner ? null : c.remaining;
+    $("usageHint").textContent = c.owner ? "Owner code: no daily limit." : `Daily limit: ${c.perDay} scans per person.`;
+    $("lockOut").classList.toggle("hidden", !c.codeRequired);
+  } catch {}
+  updCount();
+}
+$("codeBtn").onclick = async () => {
+  store.set("code", $("codeIn").value.trim());
+  const r = await fetch("/api/config", { headers: { "X-Access-Code": code() } });
+  const c = await r.json();
+  if (c.unlocked) { $("lock").classList.add("hidden"); $("lockErr").innerHTML = ""; loadConfig(); }
+  else $("lockErr").innerHTML = `<div class="err">That code didn't work. Check with whoever shared the app.</div>`;
+};
+$("codeIn").onkeydown = (e) => { if (e.key === "Enter") $("codeBtn").click(); };
+
+// ---------- settings ----------
+function openSheet(){
+  const s = settings();
+  $("setFee").value = s.fee;
+  document.querySelectorAll("#setRoi button").forEach((b) => b.classList.toggle("on", +b.dataset.r === s.roi));
+  $("sheetWrap").classList.remove("hidden");
+}
+function closeSheet(){
+  const s = settings();
+  const f = parseFloat($("setFee").value); if (!isNaN(f) && f >= 0 && f < 60) s.fee = f;
+  store.set("settings", s);
+  $("sheetWrap").classList.add("hidden");
+  if (current) recalc();
+}
+$("gear").onclick = openSheet;
+$("sheetBg").onclick = closeSheet;
+$("sheetDone").onclick = closeSheet;
+$("setRoi").onclick = (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  const s = settings(); s.roi = +b.dataset.r; store.set("settings", s);
+  document.querySelectorAll("#setRoi button").forEach((x) => x.classList.toggle("on", x === b));
+};
+$("lockOut").onclick = () => { store.set("code", ""); $("sheetWrap").classList.add("hidden"); $("codeIn").value = ""; $("lock").classList.remove("hidden"); };
+
+// ---------- photos ----------
 function resize(src, max, q){
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -237,7 +413,8 @@ async function addFiles(files){
     if (photos.length >= 4) break;
     const u = URL.createObjectURL(f);
     photos.push(await resize(u, 1280, 0.82));
-    URL.revokeObjectURL(u);
+    if (!$("upc").value) decodeBarcode(u, true);
+    else URL.revokeObjectURL(u);
   }
   renderTray();
 }
@@ -246,37 +423,155 @@ function renderTray(){
   t.classList.toggle("hidden", !photos.length);
   t.innerHTML = photos.map((p, i) => `<div class="shot"><img src="${p}"><button data-i="${i}" aria-label="Remove">×</button></div>`).join("")
     + (photos.length && photos.length < 4 ? `<button class="add" id="addBtn"><b>+</b>Angle</button>` : "");
-  $("goBtn").disabled = !photos.length;
+  updGo();
   $("capT").textContent = photos.length ? "Tap to start a new item" : "Tap to scan an item";
 }
+function updGo(){ $("goBtn").disabled = !photos.length && $("upc").value.replace(/\D/g, "").length < 8; }
 $("tray").onclick = (e) => {
   if (e.target.closest("#addBtn")) return $("lib").click();
   const i = e.target.dataset.i; if (i != null) { photos.splice(+i, 1); renderTray(); }
 };
-$("camBtn").onclick = () => { photos = []; renderTray(); $("result").innerHTML = ""; $("price").value = ""; $("notes").value = ""; $("cam").click(); };
+$("camBtn").onclick = () => {
+  photos = []; renderTray(); $("result").innerHTML = ""; current = null;
+  $("price").value = ""; $("notes").value = ""; $("upc").value = ""; bcMsg("");
+  $("cam").click();
+};
 $("cam").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
 $("lib").onchange = (e) => { addFiles(e.target.files); e.target.value = ""; };
 
+// ---------- barcode ----------
+function bcMsg(t, ok){ $("bcMsg").textContent = t; $("bcMsg").className = "bc-msg" + (ok ? " ok" : ""); }
+async function decodeBarcode(objUrl, quiet){
+  let text = null;
+  try {
+    if ("BarcodeDetector" in window) {
+      const img = await createImageBitmap(await (await fetch(objUrl)).blob());
+      const det = new BarcodeDetector({ formats: ["ean_13","ean_8","upc_a","upc_e","code_128","code_39"] });
+      const found = await det.detect(img);
+      if (found.length) text = found[0].rawValue;
+    }
+    if (!text && window.ZXing && !quiet) {
+      const reader = new ZXing.BrowserMultiFormatReader();
+      const res = await reader.decodeFromImageUrl(objUrl);
+      text = res && res.getText();
+    }
+  } catch {}
+  URL.revokeObjectURL(objUrl);
+  if (text) { $("upc").value = text.replace(/\D/g, "") || text; bcMsg("✓ Barcode found", true); updGo(); }
+  else if (!quiet) bcMsg("Couldn't read it. Get closer, fill the frame with the barcode, avoid glare. Or type the numbers.");
+}
+$("bcBtn").onclick = () => $("bcam").click();
+$("bcam").onchange = (e) => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  bcMsg("Reading barcode…");
+  decodeBarcode(URL.createObjectURL(f), false);
+};
+$("upc").oninput = updGo;
+
+// ---------- identify ----------
 $("goBtn").onclick = async () => {
   $("goBtn").disabled = true;
-  $("result").innerHTML = `<div class="scanning"><img src="${photos[0]}"><div class="beam"></div><div class="lbl"><i></i>Identifying &amp; checking eBay…</div></div>`;
+  const bg = photos[0] ? `<img src="${photos[0]}">` : `<div style="height:200px;background:var(--s1)"></div>`;
+  $("result").innerHTML = `<div class="scanning">${bg}<div class="beam"></div><div class="lbl"><i></i>Identifying &amp; checking eBay…</div></div>`;
   $("result").scrollIntoView({ behavior:"smooth", block:"start" });
   try {
-    const r = await fetch("/api/identify", { method:"POST", headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ images: photos, price: $("price").value, notes: $("notes").value }) });
+    const r = await fetch("/api/identify", { method:"POST", headers:{ "Content-Type":"application/json", "X-Access-Code": code() },
+      body: JSON.stringify({ images: photos, upc: $("upc").value, price: $("price").value, notes: $("notes").value }) });
     const d = await r.json();
+    if (r.status === 401 && d.needCode) { $("lock").classList.remove("hidden"); throw new Error("Enter your invite code to scan."); }
     if (!r.ok) throw new Error(d.error || "Something went wrong");
-    d.asked = $("price").value; d.when = Date.now();
-    d.photo = await resize(photos[0], 720, 0.75);
-    d.thumb = await resize(photos[0], 160, 0.6);
-    const h = loadHist(); h.unshift(d); saveHist(h);
+    if (d.remaining != null) remainingToday = d.remaining;
+    d.asked = $("price").value; d.when = Date.now(); d.id = d.when;
+    if (photos[0]) { d.photo = await resize(photos[0], 720, 0.75); d.thumb = await resize(photos[0], 160, 0.6); }
+    const h = store.get("scans", []); h.unshift(d); store.set("scans", h.slice(0, 100));
+    updCount();
     showResult(d);
   } catch (e) {
     $("result").innerHTML = `<div class="err">⚠️ ${esc(e.message)}</div>`;
   }
-  $("goBtn").disabled = false;
+  updGo();
 };
 
+// ---------- profit ----------
+function profitFor(sell, ship, cost){
+  const s = settings();
+  const fees = sell * s.fee / 100 + (sell > 0 ? 0.4 : 0);
+  const net = sell - fees - ship;
+  const profit = net - cost;
+  const roi = cost > 0 ? profit / cost : null;
+  const maxPay = Math.max(0, net / (1 + s.roi));
+  return { fees, net, profit, roi, maxPay };
+}
+function recalc(){
+  if (!current) return;
+  const sell = parseFloat($("pSell").value) || 0;
+  const ship = parseFloat($("pShip").value) || 0;
+  const cost = parseFloat($("pCost").value) || 0;
+  const p = profitFor(sell, ship, cost);
+  const s = settings();
+  $("pNet").textContent = money(p.profit);
+  $("pNet").className = "net " + (p.profit >= 0 ? "pos" : "neg");
+  $("pRoi").textContent = p.roi == null ? "enter what you'd pay" : (p.roi >= 0 ? "+" : "") + Math.round(p.roi * 100) + "% return";
+  $("pMax").textContent = money(p.maxPay);
+  $("pMaxK").textContent = s.roi === 0.5 ? "Max to pay (+50%)" : s.roi === 2 ? "Max to pay (3×)" : "Max to pay (2×)";
+  $("pBreak").textContent = `Sell ${money(sell)} − fees ${money(p.fees)} (${s.fee}% + $0.40) − shipping ${money(ship)} − cost ${money(cost)}`;
+  current._calc = { sell, ship, cost, profit: p.profit };
+}
+
+// ---------- haul ----------
+function inHaul(id){ return store.get("haul", []).some((x) => x.id === id); }
+function toggleHaul(){
+  if (!current) return;
+  recalc();
+  let haul = store.get("haul", []);
+  if (inHaul(current.id)) haul = haul.filter((x) => x.id !== current.id);
+  else haul.unshift({ id: current.id, item: current.item, thumb: current.thumb, verdict: current.verdict,
+    cost: current._calc.cost, sell: current._calc.sell, profit: current._calc.profit });
+  store.set("haul", haul);
+  updCount(); paintHaulBtn();
+}
+function paintHaulBtn(){
+  const b = $("haulBtn"); if (!b) return;
+  const on = inHaul(current.id);
+  b.classList.toggle("done", on);
+  b.textContent = on ? "✓ In today's haul (tap to remove)" : "+ Add to today's haul";
+}
+function showHaul(){
+  const haul = store.get("haul", []);
+  if (!haul.length) {
+    $("haulBody").innerHTML = `<div class="empty"><b>🛍️</b>Nothing in your haul yet.<br>Scan an item and tap “Add to today's haul”.</div>`;
+    return;
+  }
+  const cost = haul.reduce((a, x) => a + (x.cost || 0), 0);
+  const sell = haul.reduce((a, x) => a + (x.sell || 0), 0);
+  const profit = haul.reduce((a, x) => a + (x.profit || 0), 0);
+  $("haulBody").innerHTML = `
+    <div class="haul-top">
+      <div class="k">Est. profit after fees &amp; shipping</div>
+      <div class="big ${profit >= 0 ? "pos" : "neg"}">${money(profit)}</div>
+      <div class="haul-grid">
+        <div><div class="k">Items</div><b>${haul.length}</b></div>
+        <div><div class="k">Spent</div><b>${money(cost)}</b></div>
+        <div><div class="k">Resale</div><b>${money(sell)}</b></div>
+      </div>
+    </div>
+    ${haul.map((x) => `
+      <div class="hl">
+        <img src="${x.thumb || ""}" alt="" onerror="this.style.visibility='hidden'">
+        <div class="t"><div class="n">${esc(x.item)}</div><div class="m">Paid ${money(x.cost)} · sells ~${money(x.sell)}</div></div>
+        <div class="p ${x.profit >= 0 ? "pos" : "neg"}">${money(x.profit)}</div>
+        <button class="x" data-id="${x.id}" aria-label="Remove">×</button>
+      </div>`).join("")}
+    <button class="ghost" id="newHaul">Start a new haul</button>`;
+}
+$("haulBody").onclick = (e) => {
+  if (e.target.id === "newHaul") { if (confirm("Clear this haul and start a new one? Your scan history stays.")) { store.set("haul", []); updCount(); showHaul(); } return; }
+  const id = e.target.dataset.id;
+  if (id) { store.set("haul", store.get("haul", []).filter((x) => String(x.id) !== id)); updCount(); showHaul(); }
+};
+
+// ---------- result ----------
 const listCard = (i) => `
   <a class="lst" target="_blank" rel="noopener" href="${esc(i.url)}">
     <img src="${esc(i.image || "")}" loading="lazy" alt="" onerror="this.style.visibility='hidden'">
@@ -286,26 +581,29 @@ const listCard = (i) => `
 const checks = (arr, red) => arr && arr.length ? `<ul class="checks ${red ? "red" : ""}">${arr.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : `<div class="none">Nothing flagged</div>`;
 
 function showResult(d){
+  current = d;
   const v = ["BUY","MAYBE","PASS"].includes(d.verdict) ? d.verdict : "MAYBE";
   const q = encodeURIComponent(d.search_query || d.item || "");
   const e = d.ebay || {};
   const st = e.stats;
+  const mid = Math.round(((+d.price_low || 0) + (+d.price_high || 0)) / 2);
+  const ship = d.ship_estimate != null ? Math.round(+d.ship_estimate) : 10;
   let ebay = "";
   if (e.error) ebay = `<div class="sec"><h3>eBay</h3><div class="card note">${esc(e.error)}</div></div>`;
   else {
     if (e.image && e.image.length) ebay += `<div class="sec"><h3>Looks like this <small>visual matches</small></h3><div class="rail">${e.image.slice(0,10).map(listCard).join("")}</div></div>`;
-    if (e.keyword && e.keyword.length) ebay += `<div class="sec"><h3>Listed now <small>${(e.total||0).toLocaleString()} on eBay</small></h3><div class="rail">${e.keyword.slice(0,10).map(listCard).join("")}</div></div>`;
+    if (e.keyword && e.keyword.length) ebay += `<div class="sec"><h3>Listed now <small>${e.byBarcode ? "exact barcode match · " : ""}${(e.total||0).toLocaleString()} on eBay</small></h3><div class="rail">${e.keyword.slice(0,10).map(listCard).join("")}</div></div>`;
     if (!ebay) ebay = `<div class="sec"><h3>eBay</h3><div class="card note">No matching active listings found.</div></div>`;
   }
 
   $("result").innerHTML = `
   <div class="res">
     <div class="hero">
-      ${d.photo ? `<img src="${d.photo}" alt="">` : `<div style="height:120px"></div>`}
+      ${d.photo ? `<img src="${d.photo}" alt="">` : `<div style="height:130px"></div>`}
       <div class="fade"></div>
       <div class="verdict v-${v}">${v}</div>
       <div class="over">
-        <div class="tag">${esc(d.category)} · ${esc(d.confidence)} confidence</div>
+        <div class="tag">${esc(d.category)} · ${esc(d.confidence)} confidence${d.upc ? " · UPC " + esc(d.upc) : ""}</div>
         <h2>${esc(d.item)}</h2>
       </div>
     </div>
@@ -315,6 +613,22 @@ function showResult(d){
       <div class="big">${money(d.price_low)}–${money(d.price_high)}</div>
       <div class="why">${esc(d.price_basis)}</div>
       <div class="reason">${esc(d.verdict_reason)}</div>
+    </div>
+
+    <div class="sec"><h3>Your profit <small>edit any number</small></h3>
+      <div class="card">
+        <div class="calc">
+          <div class="field"><label>You pay</label><div class="money"><span>$</span><input type="number" id="pCost" inputmode="decimal" value="${d.asked ? esc(d.asked) : ""}" placeholder="0"></div></div>
+          <div class="field"><label>Sell for</label><div class="money"><span>$</span><input type="number" id="pSell" inputmode="decimal" value="${mid}"></div></div>
+          <div class="field"><label>Shipping</label><div class="money"><span>$</span><input type="number" id="pShip" inputmode="decimal" value="${ship}"></div></div>
+        </div>
+        <div class="profit">
+          <div><div class="k">Profit</div><div class="net" id="pNet">$0</div><div class="roi" id="pRoi"></div></div>
+          <div class="maxpay"><div class="k" id="pMaxK">Max to pay</div><div class="v" id="pMax">$0</div></div>
+        </div>
+        <div class="breakdown" id="pBreak"></div>
+        <button class="haul-btn" id="haulBtn"></button>
+      </div>
     </div>
 
     <div class="stats">
@@ -327,7 +641,7 @@ function showResult(d){
 
     <div class="sec"><h3>Check sold prices</h3>
       <div class="chips">
-        <a class="chip pri" target="_blank" rel="noopener" href="https://www.ebay.com/sch/i.html?_nkw=${q}&LH_Sold=1&LH_Complete=1">eBay sold ↗</a>
+        <a class="chip pri" target="_blank" rel="noopener" href="https://www.ebay.com/sch/i.html?_nkw=${d.upc && !q ? d.upc : q}&LH_Sold=1&LH_Complete=1">eBay sold ↗</a>
         <a class="chip" target="_blank" rel="noopener" href="https://www.worthpoint.com/search?query=${q}">WorthPoint ↗</a>
         <a class="chip" target="_blank" rel="noopener" href="https://www.google.com/search?tbm=shop&q=${q}">Google ↗</a>
         <a class="chip" target="_blank" rel="noopener" href="https://www.facebook.com/marketplace/search/?query=${q}">Marketplace ↗</a>
@@ -340,13 +654,21 @@ function showResult(d){
     <div class="sec"><h3>Red flags</h3><div class="card">${checks(d.red_flags, true)}</div></div>
     <div class="sec"><h3>Condition</h3><div class="card"><p class="note">${esc(d.condition_notes)}</p></div></div>
   </div>`;
+  ["pCost","pSell","pShip"].forEach((id) => $(id).oninput = () => { recalc(); syncHaulItem(); });
+  $("haulBtn").onclick = toggleHaul;
+  recalc(); paintHaulBtn();
+}
+function syncHaulItem(){
+  if (!current || !inHaul(current.id)) return;
+  store.set("haul", store.get("haul", []).map((x) => x.id === current.id ? { ...x, cost: current._calc.cost, sell: current._calc.sell, profit: current._calc.profit } : x));
 }
 
+// ---------- history ----------
 function showHist(){
-  const h = loadHist();
+  const h = store.get("scans", []);
   $("histList").innerHTML = h.length ? h.map((d, i) => `
     <button class="h-item" data-i="${i}">
-      <img src="${d.thumb || ""}" alt="">
+      <img src="${d.thumb || ""}" alt="" onerror="this.style.visibility='hidden'">
       <div class="t"><div class="n">${esc(d.item)}</div>
       <div class="m"><span class="dot" style="background:${VC[d.verdict] || VC.MAYBE}"></span>${esc(d.verdict)} · ${new Date(d.when).toLocaleDateString(undefined,{month:"short",day:"numeric"})}</div></div>
       <div class="p">${money(d.price_low)}–${money(d.price_high)}</div>
@@ -354,20 +676,25 @@ function showHist(){
     : `<div class="empty"><b>📸</b>No scans yet. Your finds will show up here.</div>`;
 }
 $("histList").onclick = (e) => {
-  if (e.target.id === "clearBtn") { if (confirm("Clear all scans?")) { saveHist([]); showHist(); } return; }
+  if (e.target.id === "clearBtn") { if (confirm("Clear all scans?")) { store.set("scans", []); updCount(); showHist(); } return; }
   const el = e.target.closest(".h-item"); if (!el) return;
-  view("scan"); showResult(loadHist()[+el.dataset.i]);
+  const d = store.get("scans", [])[+el.dataset.i];
+  if (!d.id) d.id = d.when;
+  view("scan"); showResult(d);
   setTimeout(() => $("result").scrollIntoView({ behavior:"smooth" }), 50);
 };
+
 function view(v){
   $("scanView").classList.toggle("hidden", v !== "scan");
+  $("haulView").classList.toggle("hidden", v !== "haul");
   $("histView").classList.toggle("hidden", v !== "hist");
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t.dataset.v === v));
   if (v === "hist") showHist();
+  if (v === "haul") showHaul();
   window.scrollTo({ top:0 });
 }
 document.querySelectorAll(".tab").forEach((t) => t.onclick = () => view(t.dataset.v));
-updCount();
+loadConfig();
 </script>
 </body>
 </html>

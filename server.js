@@ -1,5 +1,5 @@
 // Sales Previews — zero-dependency Node server.
-// Serves the mobile web app and proxies photos to Claude for identification + pricing.
+// Serves the mobile web app, identifies items with Claude, and checks eBay.
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
@@ -8,11 +8,21 @@ const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 const MODEL = process.env.MODEL || "claude-sonnet-5-5";
 const PUBLIC = path.join(__dirname, "public");
+const MAX_BODY = 12 * 1024 * 1024; // 12 MB
+
+// ---- Access control ----
+// ACCESS_CODES: comma-separated invite codes, e.g. "wes,mom,flipteam". Empty = open to anyone (still rate-limited).
+// OWNER_CODE: optional code with no daily limit (for you).
+const CODES = (process.env.ACCESS_CODES || "").split(",").map((s) => s.trim().toLowerCase()).filter(Boolean);
+const OWNER = (process.env.OWNER_CODE || "").trim().toLowerCase();
+const PER_USER_DAILY = Number(process.env.DAILY_LIMIT_PER_USER || 40);
+const GLOBAL_DAILY = Number(process.env.DAILY_LIMIT_TOTAL || 400);
+const usage = { day: "", total: 0, by: new Map() };
+
 const EBAY_ID = process.env.EBAY_CLIENT_ID;
 const EBAY_SECRET = process.env.EBAY_CLIENT_SECRET;
 const EBAY_API = "https://api.ebay.com";
 let ebayToken = { value: null, exp: 0 };
-const MAX_BODY = 12 * 1024 * 1024; // 12 MB
 
 const TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -25,9 +35,10 @@ const TYPES = {
 };
 
 const PROMPT = `You are an expert reseller who flips items from yard sales, estate sales and thrift stores.
-Identify the item(s) in the photo(s) and estimate resale value in USD on the secondhand market.
+Identify the item and estimate what it realistically SELLS for (sold prices, not asking prices) on the US secondhand market.
 Use any visible brand names, model numbers, markings, labels, hallmarks, materials and condition clues.
-If a "price asked" is given, judge whether it's a good flip after fees (~13% eBay) and shipping.
+If a barcode and matching eBay listing titles are provided, treat them as strong evidence of the exact product.
+If a "price asked" is given, judge whether it's a good flip after ~13% eBay fees and shipping.
 
 Reply with ONLY a JSON object, no markdown, in exactly this shape:
 {
@@ -38,7 +49,8 @@ Reply with ONLY a JSON object, no markdown, in exactly this shape:
   "condition_notes": "what you can see about condition, or what to check",
   "price_low": number,
   "price_high": number,
-  "price_basis": "1 sentence on why, e.g. typical sold prices for this model",
+  "price_basis": "1 sentence on why",
+  "ship_estimate": number (typical USD cost to ship it domestically; 0 if local pickup only makes sense),
   "verdict": "BUY" | "MAYBE" | "PASS",
   "verdict_reason": "1 sentence",
   "best_platforms": ["eBay", "..."],
@@ -59,7 +71,7 @@ function readBody(req) {
     req.on("data", (c) => {
       size += c.length;
       if (size > MAX_BODY) {
-        reject(new Error("Photo too large"));
+        reject(new Error("Photos too large"));
         req.destroy();
       } else chunks.push(c);
     });
@@ -68,7 +80,43 @@ function readBody(req) {
   });
 }
 
-// ---------- eBay Browse API (active listings + search by image) ----------
+function clientIp(req) {
+  return (req.headers["x-forwarded-for"] || "").split(",")[0].trim() || req.socket.remoteAddress || "?";
+}
+
+// Returns { ok, status, error, who, owner }
+function checkAccess(req) {
+  const code = String(req.headers["x-access-code"] || "").trim().toLowerCase();
+  const owner = !!OWNER && code === OWNER;
+  if (!owner && CODES.length && !CODES.includes(code)) {
+    return { ok: false, status: 401, error: "Invite code required" };
+  }
+  return { ok: true, owner, who: owner ? "owner" : CODES.length ? "code:" + code : "ip:" + clientIp(req) };
+}
+
+function takeQuota(who, owner) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (usage.day !== today) Object.assign(usage, { day: today, total: 0, by: new Map() });
+  if (owner) { usage.total++; return null; }
+  const used = usage.by.get(who) || 0;
+  if (used >= PER_USER_DAILY) return `Daily limit reached (${PER_USER_DAILY} scans). Resets at midnight UTC.`;
+  if (usage.total >= GLOBAL_DAILY) return "The app hit its daily scan limit. Try again tomorrow.";
+  usage.by.set(who, used + 1);
+  usage.total++;
+  return null;
+}
+function refundQuota(who, owner) {
+  usage.total = Math.max(0, usage.total - 1);
+  if (!owner) usage.by.set(who, Math.max(0, (usage.by.get(who) || 1) - 1));
+}
+function remaining(who, owner) {
+  if (owner) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  const used = usage.day === today ? usage.by.get(who) || 0 : 0;
+  return Math.max(0, PER_USER_DAILY - used);
+}
+
+// ---------- eBay Browse API (active listings, search by image, GTIN) ----------
 async function getEbayToken() {
   if (ebayToken.value && Date.now() < ebayToken.exp) return ebayToken.value;
   const r = await fetch(`${EBAY_API}/identity/v1/oauth2/token`, {
@@ -89,7 +137,6 @@ function slimItems(j) {
   return (j.itemSummaries || []).map((it) => ({
     title: it.title,
     price: Number(it.price?.value) || null,
-    currency: it.price?.currency,
     condition: it.condition,
     image: it.thumbnailImages?.[0]?.imageUrl || it.image?.imageUrl,
     url: it.itemWebUrl,
@@ -97,9 +144,20 @@ function slimItems(j) {
   }));
 }
 
-async function ebaySearch(q, imageB64) {
+async function ebayHeaders() {
   const token = await getEbayToken();
-  const headers = { Authorization: `Bearer ${token}`, "X-EBAY-C-MARKETPLACE-ID": "EBAY_US", "Content-Type": "application/json" };
+  return { Authorization: `Bearer ${token}`, "X-EBAY-C-MARKETPLACE-ID": "EBAY_US", "Content-Type": "application/json" };
+}
+
+async function ebayByGtin(gtin) {
+  const headers = await ebayHeaders();
+  const r = await fetch(`${EBAY_API}/buy/browse/v1/item_summary/search?gtin=${encodeURIComponent(gtin)}&limit=20`, { headers });
+  const j = await r.json();
+  return { items: slimItems(j), total: j.total || 0 };
+}
+
+async function ebaySearch(q, imageB64) {
+  const headers = await ebayHeaders();
   const out = { keyword: [], image: [], total: 0 };
   const jobs = [];
   if (q) {
@@ -121,20 +179,22 @@ async function ebaySearch(q, imageB64) {
     );
   }
   await Promise.all(jobs);
-  const prices = out.keyword.map((i) => i.price).filter((p) => p > 0).sort((a, b) => a - b);
-  if (prices.length) {
-    out.stats = {
-      count: prices.length,
-      low: prices[0],
-      high: prices[prices.length - 1],
-      median: prices[Math.floor(prices.length / 2)],
-    };
-  }
   return out;
+}
+
+function addStats(e) {
+  const prices = (e.keyword || []).map((i) => i.price).filter((p) => p > 0).sort((a, b) => a - b);
+  if (prices.length) {
+    e.stats = { count: prices.length, low: prices[0], high: prices[prices.length - 1], median: prices[Math.floor(prices.length / 2)] };
+  }
+  return e;
 }
 
 async function identify(req, res) {
   if (!API_KEY) return send(res, 500, { error: "Server is missing ANTHROPIC_API_KEY. Add it in Render → Environment." });
+  const acc = checkAccess(req);
+  if (!acc.ok) return send(res, acc.status, { error: acc.error, needCode: true });
+
   let data;
   try {
     data = JSON.parse(await readBody(req));
@@ -142,14 +202,34 @@ async function identify(req, res) {
     return send(res, 400, { error: e.message || "Bad request" });
   }
   const images = Array.isArray(data.images) ? data.images.slice(0, 4) : [];
-  if (!images.length) return send(res, 400, { error: "No photo received" });
+  const upc = String(data.upc || "").replace(/\D/g, "").slice(0, 14);
+  if (!images.length && !upc) return send(res, 400, { error: "Add a photo or a barcode" });
 
-  const content = images.map((dataUrl) => {
+  const quotaErr = takeQuota(acc.who, acc.owner);
+  if (quotaErr) return send(res, 429, { error: quotaErr });
+
+  const content = [];
+  for (const dataUrl of images) {
     const m = /^data:(image\/[a-z]+);base64,(.+)$/i.exec(dataUrl || "");
-    if (!m) throw new Error("Bad image");
-    return { type: "image", source: { type: "base64", media_type: m[1], data: m[2] } };
-  });
+    if (!m) return send(res, 400, { error: "Bad image" });
+    content.push({ type: "image", source: { type: "base64", media_type: m[1], data: m[2] } });
+  }
+
+  const ebayOn = !!(EBAY_ID && EBAY_SECRET);
+  let gtinHits = null;
+  if (upc && ebayOn) {
+    try { gtinHits = await ebayByGtin(upc); } catch { gtinHits = null; }
+  }
+
   let text = PROMPT;
+  if (upc) {
+    text += `\n\nBarcode (UPC/EAN): ${upc}`;
+    if (gtinHits && gtinHits.items.length) {
+      text += `\neBay listings with this exact barcode:\n` + gtinHits.items.slice(0, 8).map((i) => `- ${i.title}${i.price ? ` ($${i.price})` : ""}`).join("\n");
+    } else if (!images.length) {
+      text += `\nNo eBay listings matched this barcode. Identify it from the barcode if you know it; otherwise set confidence "low" and say a photo is needed.`;
+    }
+  }
   if (data.price) text += `\n\nPrice asked at the sale: $${String(data.price).slice(0, 20)}`;
   if (data.notes) text += `\n\nNotes from the buyer: ${String(data.notes).slice(0, 500)}`;
   content.push({ type: "text", text });
@@ -157,30 +237,33 @@ async function identify(req, res) {
   try {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: {
-        "x-api-key": API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({ model: MODEL, max_tokens: 1200, messages: [{ role: "user", content }] }),
+      headers: { "x-api-key": API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: MODEL, max_tokens: 1400, messages: [{ role: "user", content }] }),
     });
     const j = await r.json();
-    if (!r.ok) return send(res, 502, { error: j?.error?.message || `AI error ${r.status}` });
+    if (!r.ok) { refundQuota(acc.who, acc.owner); return send(res, 502, { error: j?.error?.message || `AI error ${r.status}` }); }
     const out = (j.content || []).map((b) => b.text || "").join("");
     const match = out.match(/\{[\s\S]*\}/);
-    if (!match) return send(res, 502, { error: "Couldn't read the AI response", raw: out });
+    if (!match) { refundQuota(acc.who, acc.owner); return send(res, 502, { error: "Couldn't read the AI response" }); }
     const result = JSON.parse(match[0]);
-    if (EBAY_ID && EBAY_SECRET) {
+    if (upc) result.upc = upc;
+
+    if (ebayOn) {
       try {
-        result.ebay = await ebaySearch(result.search_query || result.item, content[0].source.data);
+        const firstImg = content[0]?.type === "image" ? content[0].source.data : null;
+        const e = await ebaySearch(result.search_query || result.item, firstImg);
+        if (gtinHits && gtinHits.items.length) { e.keyword = gtinHits.items; e.total = gtinHits.total; e.byBarcode = true; }
+        result.ebay = addStats(e);
       } catch (e) {
         result.ebay = { error: e.message };
       }
     } else {
       result.ebay = { error: "eBay not set up yet (add EBAY_CLIENT_ID and EBAY_CLIENT_SECRET in Render)" };
     }
+    result.remaining = remaining(acc.who, acc.owner);
     send(res, 200, result);
   } catch (e) {
+    refundQuota(acc.who, acc.owner);
     send(res, 502, { error: e.message || "AI request failed" });
   }
 }
@@ -189,14 +272,20 @@ http
   .createServer(async (req, res) => {
     const url = new URL(req.url, "http://x");
     if (req.method === "POST" && url.pathname === "/api/identify") {
-      try {
-        return await identify(req, res);
-      } catch (e) {
-        return send(res, 400, { error: e.message });
-      }
+      try { return await identify(req, res); } catch (e) { return send(res, 400, { error: e.message }); }
     }
-    if (url.pathname === "/healthz") return send(res, 200, { ok: true, keySet: !!API_KEY });
-    let p = url.pathname === "/" ? "/index.html" : url.pathname;
+    if (url.pathname === "/api/config") {
+      const acc = checkAccess(req);
+      return send(res, 200, {
+        codeRequired: CODES.length > 0,
+        unlocked: acc.ok,
+        owner: !!acc.owner,
+        remaining: acc.ok ? remaining(acc.who, acc.owner) : 0,
+        perDay: PER_USER_DAILY,
+      });
+    }
+    if (url.pathname === "/healthz") return send(res, 200, { ok: true, keySet: !!API_KEY, ebay: !!(EBAY_ID && EBAY_SECRET), codes: CODES.length });
+    const p = url.pathname === "/" ? "/index.html" : url.pathname;
     const file = path.normalize(path.join(PUBLIC, p));
     if (!file.startsWith(PUBLIC)) return send(res, 403, "Forbidden", "text/plain");
     fs.readFile(file, (err, buf) => {
