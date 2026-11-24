@@ -20,8 +20,18 @@ Snap a photo of an item at a yard sale, estate sale or thrift store and get:
 - `OWNER_CODE`: your personal code, with no daily limit.
 - `DAILY_LIMIT_PER_USER` (default 40) and `DAILY_LIMIT_TOTAL` (default 400): caps reset daily, and on restart.
 
+### Database (accounts)
+- `DATABASE_URL`: Render Postgres **Internal Database URL**. It's required for accounts, so without it sign-up is disabled.
+- Tables are created automatically on startup.
+
 ### Features
-Photo ID and pricing, barcode/UPC scan with exact eBay match, profit calculator (fees, shipping, ROI, max to pay), estate sale "Haul" totals, scan history.
+- Accounts (username + password), invite codes at sign-up, per-user daily AI limits, owner account with no limits
+- Photo ID and pricing, barcode/UPC scan with exact eBay match, "Fix ID" re-pricing when the AI guesses wrong
+- Profit calculator (fees, shipping, ROI, max to pay), estate sale "Haul" totals, auto-add to haul
+- Item tracking: Watching → Bought → Listed → Sold → real profit; notes; search and filters; CSV export
+- AI eBay listing drafts (title, price, specifics, description) with copy buttons
+- Public share links for a find (never shows what you paid)
+- Profile: avatar, display name, stats, light/dark/auto theme, 5 accent colors, password change, delete account
 
 eBay's public API only returns active listings. Sold prices open via the "eBay sold" link (eBay's sold-data API is restricted).
 

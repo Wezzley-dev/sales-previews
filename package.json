@@ -1,9 +1,10 @@
 {
   "name": "sales-previews",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Snap a photo at a yard or estate sale and get an ID + resale price estimate.",
+  "description": "Snap a photo at a yard or estate sale and get an ID, resale price, profit and eBay matches.",
   "main": "server.js",
   "scripts": { "start": "node server.js" },
-  "engines": { "node": ">=18" }
+  "engines": { "node": ">=18" },
+  "dependencies": { "pg": "^8.13.1" }
 }
